@@ -103,12 +103,12 @@ class Game:
 			#self.initialize_game()
 		return self.result
 
-	def input_move(self):
+	def input_move(self, n):
 		while True:
 			print(F'Player {self.player_turn}, enter your move:')
 			px = int(input('enter the x coordinate: '))
 			py = int(input('enter the y coordinate: '))
-			if self.is_valid(px, py):
+			if self.is_valid(px, py, n):
 				return (px,py)
 			else:
 				print('The move is not valid! You may try again.')
@@ -245,7 +245,7 @@ class Game:
 					if self.recommend:
 						print(F'Evaluation time: {round(end - start, 7)}s')
 						print(F'Recommended move: x = {x}, y = {y}')
-					(x,y) = self.input_move()
+					(x,y) = self.input_move(n)
 			if (self.player_turn == 'X' and player_x == self.AI) or (self.player_turn == 'O' and player_o == self.AI):
 						print(F'Evaluation time: {round(end - start, 7)}s')
 						print(F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
@@ -306,7 +306,7 @@ def receiveInputs():
 	player2 = None
 	pin2 = -1
 	while pin2 != 0 and pin2 != 1:
-		pin2 = int(input("Should player 1 be human controlled? Enter 1 for yes, 0 for no: "))
+		pin2 = int(input("Should player 2 be human controlled? Enter 1 for yes, 0 for no: "))
 		if pin2 == 0:
 			player2 = Game.AI
 		elif pin2 == 1:
