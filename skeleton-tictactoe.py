@@ -17,16 +17,54 @@ class Game:
 		# Player X or 1 always plays first
 		self.player_turn = 'X'
 
-	def draw_board(self, size=3):
+	def draw_board(self, size=3, moveNum=0):
 		print()
+		header = "  "
+		topLine = " +"
+		for i in range(size):
+			header = header + chr(ord('A') + i)
+			topLine = topLine + "-"
+		header = "{0}  (move #{1})".format(header, moveNum)
+		print(header)
+		print(topLine)
 		for y in range(0, size):
+			print(F'{y}|', end="")
 			for x in range(0, size):
 				print(F'{self.current_state[x][y]}', end="")
 			print()
 		print()
+
+	def convert_input_x(self, px):
+		inputX = 0
+		if px == "A":
+			inputX = 0
+		elif px == "B":
+			inputX = 1
+		elif px == "C":
+			inputX = 2
+		elif px == "D":
+			inputX = 3
+		elif px == "E":
+			inputX = 4
+		elif px == "F":
+			inputX = 5
+		elif px == "G":
+			inputX = 6
+		elif px == "H":
+			inputX = 7
+		elif px == "I":
+			inputX = 8
+		elif px == "J":
+			inputX = 9
+		else:
+			inputX = -1
+		return inputX
+
+	def convert_x_to_input(self, x):
+		return chr(ord('A') + x)
 		
 	def is_valid(self, px, py, n):
-		if px < 0 or px > n or py < 0 or py > n:
+		if px < 0 or px > n-1 or py < 0 or py > n-1:
 			return False
 		elif self.current_state[px][py] != '.':
 			return False
@@ -105,9 +143,12 @@ class Game:
 
 	def input_move(self, n):
 		while True:
+			text1 = 'Enter the x coordinate (as a capital letter from A to {0}...): '.format(chr(ord('A')+n-1))
+			text2 = 'Enter the y coordinate (as a number from 0 to {}): '.format(n-1)
 			print(F'Player {self.player_turn}, enter your move:')
-			px = int(input('enter the x coordinate: '))
-			py = int(input('enter the y coordinate: '))
+			px = input(text1)
+			py = int(input(text2))
+			px = self.convert_input_x(px)
 			if self.is_valid(px, py, n):
 				return (px,py)
 			else:
@@ -216,7 +257,39 @@ class Game:
 							beta = value
 		return (value, x, y)
 
+	def place_blocs(self, b=0, n=3):
+		if b > 0:
+			blocPlacements = []
+			yesNo = -1
+			choosePlacement = False
+			while yesNo != 0 and yesNo != 1:
+				yesNo = int(input("Would you like to choose where to place the blocs? Enter 1 for yes, 0 for no: "))
+				if yesNo == 0:
+					choosePlacement = False
+				elif yesNo == 1:
+					choosePlacement = True
+				elif yesNo != 0 and yesNo != 1:
+					print("Your input must be either 0 for no or 1 for yes! Please try again.")
+			if choosePlacement:
+				for i in range(b):
+					while True:
+						displayText = "Enter the coordinate for bloc number {}:".format(i+1)
+						text1 = 'Enter the x coordinate (as a capital letter from A to {}...): '.format(chr(ord('A') + n - 1))
+						text2 = 'Enter the y coordinate (as a number from 0 to {}): '.format(n - 1)
+						print(displayText)
+						inputX = input(text1)
+						py = int(input(text2))
+						px = self.convert_input_x(inputX)
+						if self.is_valid(px, py, n):
+							self.current_state[px][py] = '*'
+							blocPlacements.append(tuple([inputX, py]))
+							break
+						else:
+							print('The move is not valid! You may try again.')
+			print("blocs ={}".format(blocPlacements))
+
 	def play(self,algo=True,player_x=None,player_o=None,n=3,s=3,d1=4,d2=4,t=10):
+		moveNum = 0
 		if algo == True:
 			algo = self.ALPHABETA
 		elif algo == False:
@@ -226,6 +299,7 @@ class Game:
 		if player_o == None:
 			player_o = self.HUMAN
 		while True:
+			moveNum = moveNum + 1
 			self.draw_board(n)
 			if self.check_end(n, s):
 				return
@@ -244,11 +318,14 @@ class Game:
 			if (self.player_turn == 'X' and player_x == self.HUMAN) or (self.player_turn == 'O' and player_o == self.HUMAN):
 					if self.recommend:
 						print(F'Evaluation time: {round(end - start, 7)}s')
-						print(F'Recommended move: x = {x}, y = {y}')
+						xDisplay = self.convert_x_to_input(x)
+						print(F'Recommended move: x = {xDisplay}, y = {y}')
+					print(F'Player {self.player_turn} under Human control plays: x = {xDisplay}, y = {y}')
 					(x,y) = self.input_move(n)
 			if (self.player_turn == 'X' and player_x == self.AI) or (self.player_turn == 'O' and player_o == self.AI):
-						print(F'Evaluation time: {round(end - start, 7)}s')
-						print(F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
+					print(F'Evaluation time: {round(end - start, 7)}s')
+					xDisplay = self.convert_x_to_input(x)
+					print(F'Player {self.player_turn} under AI control plays: x = {xDisplay}, y = {y}')
 			self.current_state[x][y] = self.player_turn
 			self.switch_player()
 
@@ -313,15 +390,27 @@ def receiveInputs():
 			player2 = Game.HUMAN
 		elif pin2 != 0 and pin2 != 1:
 			print("Your input must be either 0 for no or 1 for yes! Please try again.")
-	return n, b, s, d1, d2, t, a, player1, player2
+	reccoBool = True
+	if pin1 == 1 or pin2 == 1:
+		recco = -1
+		while recco != 0 and recco != 1:
+			recco = int(input("Would the players like to be recommended moves by the algorithm? Enter 1 for yes, 0 for no: "))
+			if recco == 0:
+				reccoBool = False
+			elif recco == 1:
+				reccoBool = True
+			elif recco != 0 and recco != 1:
+				print("Your input must be either 0 for no or 1 for yes! Please try again.")
+	return n, b, s, d1, d2, t, a, player1, player2, reccoBool
 
 def main():
-	n, b, s, d1, d2, t, a, player1, player2 = receiveInputs()
+	n, b, s, d1, d2, t, a, player1, player2, reccoBool = receiveInputs()
 	if (a):
 		algo = Game.MINIMAX
 	else:
 		algo = Game.ALPHABETA
-	g = Game(recommend=True, n=n)
+	g = Game(recommend=reccoBool, n=n)
+	g.place_blocs(b=b, n=n)
 	g.play(algo=algo,player_x=player1,player_o=player2,n=n,s=s,d1=d1,d2=d2,t=t)
 
 if __name__ == "__main__":
