@@ -1,6 +1,8 @@
 # based on code from https://stackabuse.com/minimax-and-alpha-beta-pruning-in-python
 
 import time
+import random
+
 
 class Game:
 	MINIMAX = 0
@@ -280,12 +282,24 @@ class Game:
 						inputX = input(text1)
 						py = int(input(text2))
 						px = self.convert_input_x(inputX)
-						if self.is_valid(px, py, n):
+						if self.is_valid(px, py, n) and self.current_state[px][py] != '*':
 							self.current_state[px][py] = '*'
 							blocPlacements.append(tuple([inputX, py]))
 							break
 						else:
-							print('The move is not valid! You may try again.')
+							print('The coordinates are invalid or there is already a bloc there. You may try again.')
+			else:
+				for i in range(b):
+					while True:
+						px = random.randint(0, n-1)
+						py = random.randint(0, n-1)
+						if self.current_state[px][py] == '*':
+							continue
+						else:
+							self.current_state[px][py] = '*'
+							inputX = self.convert_input_x(px)
+							blocPlacements.append(tuple([inputX, py]))
+							break
 			print("blocs ={}".format(blocPlacements))
 
 	def play(self,algo=True,player_x=None,player_o=None,n=3,s=3,d1=4,d2=4,t=10):
@@ -300,7 +314,7 @@ class Game:
 			player_o = self.HUMAN
 		while True:
 			moveNum = moveNum + 1
-			self.draw_board(n)
+			self.draw_board(size=n, moveNum=moveNum)
 			if self.check_end(n, s):
 				return
 			start = time.time()
