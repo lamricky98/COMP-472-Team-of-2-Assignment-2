@@ -3,6 +3,7 @@ import re
 import time
 import random
 import itertools
+import copy
 
 class Game:
 	MINIMAX = 0
@@ -187,25 +188,18 @@ class Game:
 				value = value - diagonalString.count('X') + diagonalString.count('O')
 		return value
 
-	# helper functions for e2
-	def listOfCloseToWinning(self, maxLength=3, winningString='XX'):
-		listOfClose = []
-		for i in range(maxLength + 1):
-			combination = winningString.rjust(i, '.')
-			combination = combination.ljust(maxLength, '.')
-			if len(combination) <= maxLength and combination not in listOfClose:
-				listOfClose.append(combination)
-		return listOfClose
-
-
 	def e2_heuristic(self, n=3, s=3):
 		# Slightly more complex heuristic, biased on defensive
 		# Lower value is better for X
 		# Higher value is better for O
-		winningStringX = 'X'*(s-2)
-		closeToWinX = self.listOfCloseToWinning(maxLength=s,winningString=winningStringX)
-		winningStringO = 'O'*(s-2)
-		closeToWinO = self.listOfCloseToWinning(maxLength=s,winningString=winningStringO)
+		winningStringX = 'X'*(s-2) + '..'
+		closeToWinX = list(set(''.join(p) for p in itertools.permutations(winningStringX)))
+		winningStringX = 'X' * (s - 1) + '.'
+		closeToWinX = closeToWinX + list(set(''.join(p) for p in itertools.permutations(winningStringX)))
+		winningStringO = 'O'*(s-2) + '..'
+		closeToWinO = list(set(''.join(p) for p in itertools.permutations(winningStringO)))
+		winningStringO = 'O'*(s-1) + '.'
+		closeToWinO = closeToWinO + list(set(''.join(p) for p in itertools.permutations(winningStringO)))
 		denialOChars = 'X'*(s-1) + 'O'
 		denialXChars = 'O'*(s-1) + 'X'
 		denialO = list(set(''.join(p) for p in itertools.permutations(denialOChars)))
@@ -217,24 +211,40 @@ class Game:
 			verticalString = ""
 			for j in range(0, n):
 				verticalString = verticalString + transposedArray[i][j]
-			if verticalString in closeToWinX:
-				value = value - 15
-			if verticalString in closeToWinO:
-				value = value + 15
+			for nearWin in closeToWinX:
+				if nearWin in verticalString:
+					value = value - 15
+			for nearWin in closeToWinO:
+				if nearWin in verticalString:
+					value = value + 15
 			for den in denialX:
 				if den in verticalString:
 					value = value - 50
 			for den in denialO:
 				if den in verticalString:
 					value = value + 50
-			if len(verticalString) > 0:
+			if '*' in verticalString:
+				partitioned_string = verticalString.partition('*')
+				beforeStar = partitioned_string[0]
+				afterStar = partitioned_string[2]
 				consecutiveX = 0
 				consecutiveY = 0
-				if 'X' in verticalString:
-					consecutiveX = 0 + max(len(s) for s in re.findall(r'X+', verticalString))
-				if 'Y' in verticalString:
-					consecutiveY = 0 + max(len(s) for s in re.findall(r'O+', verticalString))
-				value = value - consecutiveX + consecutiveY
+				if len(beforeStar) >= s:
+					if beforeStar.count('X') > 1:
+						consecutiveX = 0 + (max(len(s) for s in re.findall(r'X+', beforeStar)) * 2)
+					if beforeStar.count('Y') > 1:
+						consecutiveY = 0 + (max(len(s) for s in re.findall(r'O+', beforeStar)) * 2)
+					value = value - consecutiveX + consecutiveY
+				consecutiveX = 0
+				consecutiveY = 0
+				if len(afterStar) >= s:
+					if afterStar.count('X') > 1:
+						consecutiveX = 0 + (max(len(s) for s in re.findall(r'X+', afterStar)) * 2)
+					if afterStar.count('Y') > 1:
+						consecutiveY = 0 + (max(len(s) for s in re.findall(r'O+', afterStar)) * 2)
+					value = value - consecutiveX + consecutiveY
+			else:
+				value = value - verticalString.count('X') + verticalString.count('O')
 		# Horizontal
 		for i in range(0, n):
 			horizontalString = ""
@@ -244,24 +254,40 @@ class Game:
 			if len(horizontalString) > 0:
 				consecutiveX = 0
 				consecutiveY = 0
-				if horizontalString in closeToWinX:
-					value = value - 15
-				if horizontalString in closeToWinO:
-					value = value + 15
+				for nearWin in closeToWinX:
+					if nearWin in horizontalString:
+						value = value - 15
+				for nearWin in closeToWinO:
+					if nearWin in horizontalString:
+						value = value + 15
 				for den in denialX:
 					if den in horizontalString:
 						value = value - 50
 				for den in denialO:
 					if den in horizontalString:
 						value = value + 50
-				if len(horizontalString) > 0:
+				if '*' in horizontalString:
+					partitioned_string = horizontalString.partition('*')
+					beforeStar = partitioned_string[0]
+					afterStar = partitioned_string[2]
 					consecutiveX = 0
 					consecutiveY = 0
-					if 'X' in horizontalString:
-						consecutiveX = 0 + max(len(s) for s in re.findall(r'X+', horizontalString))
-					if 'Y' in horizontalString:
-						consecutiveY = 0 + max(len(s) for s in re.findall(r'O+', horizontalString))
-					value = value - consecutiveX + consecutiveY
+					if len(beforeStar) >= s:
+						if beforeStar.count('X') > 1:
+							consecutiveX = 0 + (max(len(s) for s in re.findall(r'X+', beforeStar)) * 2)
+						if beforeStar.count('Y') > 1:
+							consecutiveY = 0 + (max(len(s) for s in re.findall(r'O+', beforeStar)) * 2)
+						value = value - consecutiveX + consecutiveY
+					consecutiveX = 0
+					consecutiveY = 0
+					if len(afterStar) >= s:
+						if afterStar.count('X') > 1:
+							consecutiveX = 0 + (max(len(s) for s in re.findall(r'X+', afterStar)) * 2)
+						if afterStar.count('Y') > 1:
+							consecutiveY = 0 + (max(len(s) for s in re.findall(r'O+', afterStar)) * 2)
+						value = value - consecutiveX + consecutiveY
+				else:
+					value = value - horizontalString.count('X') + horizontalString.count('O')
 		# Diagonal win
 		h, w = len(self.current_state), len(self.current_state[0])
 
@@ -273,24 +299,40 @@ class Game:
 			for j in range(0, len(diagList[i])):
 				diagonalString = diagonalString + diagList[i][j]
 			if len(diagonalString) >= s:
-				if diagonalString in closeToWinX:
-					value = value - 15
-				if diagonalString in closeToWinO:
-					value = value + 15
+				for nearWin in closeToWinX:
+					if nearWin in diagonalString:
+						value = value - 15
+				for nearWin in closeToWinO:
+					if nearWin in diagonalString:
+						value = value + 15
 				for den in denialX:
 					if den in diagonalString:
 						value = value - 50
 				for den in denialO:
 					if den in diagonalString:
 						value = value + 50
-				if len(diagonalString) > 0:
+				if '*' in diagonalString:
+					partitioned_string = diagonalString.partition('*')
+					beforeStar = partitioned_string[0]
+					afterStar = partitioned_string[2]
 					consecutiveX = 0
 					consecutiveY = 0
-					if 'X' in diagonalString:
-						consecutiveX = 0 + max(len(s) for s in re.findall(r'X+', diagonalString))
-					if 'Y' in diagonalString:
-						consecutiveY = 0 + max(len(s) for s in re.findall(r'O+', diagonalString))
-					value = value - consecutiveX + consecutiveY
+					if len(beforeStar) >= s:
+						if beforeStar.count('X') > 1:
+							consecutiveX = 0 + (max(len(s) for s in re.findall(r'X+', beforeStar)) * 2)
+						if beforeStar.count('Y') > 1:
+							consecutiveY = 0 + (max(len(s) for s in re.findall(r'O+', beforeStar)) * 2)
+						value = value - consecutiveX + consecutiveY
+					consecutiveX = 0
+					consecutiveY = 0
+					if len(afterStar) >= s:
+						if afterStar.count('X') > 1:
+							consecutiveX = 0 + (max(len(s) for s in re.findall(r'X+', afterStar)) * 2)
+						if afterStar.count('Y') > 1:
+							consecutiveY = 0 + (max(len(s) for s in re.findall(r'O+', afterStar)) * 2)
+						value = value - consecutiveX + consecutiveY
+				else:
+					value = value - diagonalString.count('X') + diagonalString.count('O')
 
 		antiDiagList = [[self.current_state[p - q][q]
 						 for q in range(max(p - h + 1, 0), min(p + 1, w))]
@@ -300,24 +342,40 @@ class Game:
 			for j in range(0, len(antiDiagList[i])):
 				diagonalString = diagonalString + antiDiagList[i][j]
 			if len(diagonalString) >= s:
-				if diagonalString in closeToWinX:
-					value = value - 15
-				if diagonalString in closeToWinO:
-					value = value + 15
+				for nearWin in closeToWinX:
+					if nearWin in diagonalString:
+						value = value - 15
+				for nearWin in closeToWinO:
+					if nearWin in diagonalString:
+						value = value + 15
 				for den in denialX:
 					if den in diagonalString:
 						value = value - 50
 				for den in denialO:
 					if den in diagonalString:
 						value = value + 50
-				if len(diagonalString) > 0:
+				if '*' in diagonalString:
+					partitioned_string = diagonalString.partition('*')
+					beforeStar = partitioned_string[0]
+					afterStar = partitioned_string[2]
 					consecutiveX = 0
 					consecutiveY = 0
-					if 'X' in diagonalString:
-						consecutiveX = 0 + max(len(s) for s in re.findall(r'X+', diagonalString))
-					if 'Y' in diagonalString:
-						consecutiveY = 0 + max(len(s) for s in re.findall(r'O+', diagonalString))
-					value = value - consecutiveX + consecutiveY
+					if len(beforeStar) >= s:
+						if beforeStar.count('X') > 1:
+							consecutiveX = 0 + (max(len(s) for s in re.findall(r'X+', beforeStar)) * 2)
+						if beforeStar.count('Y') > 1:
+							consecutiveY = 0 + (max(len(s) for s in re.findall(r'O+', beforeStar)) * 2)
+						value = value - consecutiveX + consecutiveY
+					consecutiveX = 0
+					consecutiveY = 0
+					if len(afterStar) >= s:
+						if afterStar.count('X') > 1:
+							consecutiveX = 0 + (max(len(s) for s in re.findall(r'X+', afterStar)) * 2)
+						if afterStar.count('Y') > 1:
+							consecutiveY = 0 + (max(len(s) for s in re.findall(r'O+', afterStar)) * 2)
+						value = value - consecutiveX + consecutiveY
+				else:
+					value = value - diagonalString.count('X') + diagonalString.count('O')
 		return value
 
 	def input_move(self, n):
@@ -495,6 +553,7 @@ class Game:
 							inputX = self.convert_x_to_input(px)
 							blocPlacements.append(tuple([inputX, py]))
 							break
+			self.bloc_snapshot = copy.deepcopy(self.current_state)
 			print("blocs ={}".format(blocPlacements))
 
 	def play(self,algo=True,player_x=None,player_o=None,n=3,s=3,d1=4,d2=4,t=10,p1e=E1,p2e=E2):
@@ -507,6 +566,7 @@ class Game:
 			player_x = self.HUMAN
 		if player_o == None:
 			player_o = self.HUMAN
+		self.current_state = copy.deepcopy(self.bloc_snapshot)
 		while True:
 			moveNum = moveNum + 1
 			self.draw_board(size=n, moveNum=moveNum)
@@ -635,12 +695,13 @@ def receiveInputs():
 def main():
 	n, b, s, d1, d2, t, a, player1, player2, reccoBool, p1e, p2e = receiveInputs()
 	if (a):
-		algo = Game.MINIMAX
-	else:
 		algo = Game.ALPHABETA
+	else:
+		algo = Game.MINIMAX
 	g = Game(recommend=reccoBool, n=n)
 	g.place_blocs(b=b, n=n)
 	g.play(algo=algo,player_x=player1,player_o=player2,n=n,s=s,d1=d1,d2=d2,t=t, p1e=p1e, p2e=p2e)
+	g.play(algo=algo, player_x=player2, player_o=player1, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p2e, p2e=p1e)
 
 if __name__ == "__main__":
 	main()
