@@ -1,5 +1,5 @@
 # based on code from https://stackabuse.com/minimax-and-alpha-beta-pruning-in-python
-
+import re
 import time
 import random
 
@@ -9,6 +9,8 @@ class Game:
 	ALPHABETA = 1
 	HUMAN = 2
 	AI = 3
+	E1 = 4
+	E2 = 5
 	
 	def __init__(self, recommend = True, n=3, b=0):
 		self.initialize_game(n)
@@ -143,6 +145,122 @@ class Game:
 			#self.initialize_game()
 		return self.result
 
+	def e1_heuristic(self, n=3, s=3):
+		# Simple heuristic optimized for X
+		# Lower value is better for X
+		# Higher value is better for O
+		value = 0
+		# Vertical
+		transposedArray = [list(i) for i in zip(*self.current_state)]
+		for i in range(0, n):
+			verticalString = ""
+			for j in range(0, n):
+				verticalString = verticalString + transposedArray[i][j]
+			value = value - verticalString.count('X') + verticalString.count('O')
+		# Horizontal
+		for i in range(0, n):
+			horizontalString = ""
+			for j in range(0, n):
+				horizontalString = horizontalString + self.current_state[i][j]
+			value = value - horizontalString.count('X') + horizontalString.count('O')
+		# Diagonal win
+		h, w = len(self.current_state), len(self.current_state[0])
+
+		diagList = [[self.current_state[h - 1 - q][p - q]
+					 for q in range(min(p, h - 1), max(0, p - w + 1) - 1, -1)]
+					for p in range(h + w - 1)]
+		for i in range(0, len(diagList)):
+			diagonalString = ""
+			for j in range(0, len(diagList[i])):
+				diagonalString = diagonalString + diagList[i][j]
+			if len(diagonalString) >= s:
+				value = value - diagonalString.count('X') + diagonalString.count('O')
+
+		antiDiagList = [[self.current_state[p - q][q]
+						 for q in range(max(p - h + 1, 0), min(p + 1, w))]
+						for p in range(h + w - 1)]
+		for i in range(0, len(antiDiagList)):
+			diagonalString = ""
+			for j in range(0, len(antiDiagList[i])):
+				diagonalString = diagonalString + antiDiagList[i][j]
+			if len(diagonalString) >= s:
+				value = value - diagonalString.count('X') + diagonalString.count('O')
+		return value
+
+	def e2_heuristic(self, n=3, s=3): #to be improved
+		# Simple heuristic optimized for X
+		# Lower value is better for X
+		# Higher value is better for O
+		value = 0
+		# Vertical
+		transposedArray = [list(i) for i in zip(*self.current_state)]
+		for i in range(0, n):
+			verticalString = ""
+			for j in range(0, n):
+				verticalString = verticalString + transposedArray[i][j]
+			verticalString = verticalString.replace(".","")
+			if len(verticalString) > 0:
+				consecutiveX = 0
+				consecutiveY = 0
+				if 'X' in verticalString:
+					consecutiveX = 0 + max(len(s) for s in re.findall(r'X+', verticalString))
+				if 'Y' in verticalString:
+					consecutiveY = 0 + max(len(s) for s in re.findall(r'O+', verticalString))
+				value = value - consecutiveX + consecutiveY
+		# Horizontal
+		for i in range(0, n):
+			horizontalString = ""
+			for j in range(0, n):
+				horizontalString = horizontalString + self.current_state[i][j]
+			horizontalString = horizontalString.replace(".", "")
+			if len(horizontalString) > 0:
+				consecutiveX = 0
+				consecutiveY = 0
+				if 'X' in horizontalString:
+					consecutiveX = 0 + max(len(s) for s in re.findall(r'X+', horizontalString))
+				if 'Y' in horizontalString:
+					consecutiveY = 0 + max(len(s) for s in re.findall(r'O+', horizontalString))
+				value = value - consecutiveX + consecutiveY
+		# Diagonal win
+		h, w = len(self.current_state), len(self.current_state[0])
+
+		diagList = [[self.current_state[h - 1 - q][p - q]
+					 for q in range(min(p, h - 1), max(0, p - w + 1) - 1, -1)]
+					for p in range(h + w - 1)]
+		for i in range(0, len(diagList)):
+			diagonalString = ""
+			for j in range(0, len(diagList[i])):
+				diagonalString = diagonalString + diagList[i][j]
+			if len(diagonalString) >= s:
+				diagonalString = diagonalString.replace(".", "")
+				if len(diagonalString) > 0:
+					consecutiveX = 0
+					consecutiveY = 0
+					if 'X' in diagonalString:
+						consecutiveX = 0 + max(len(s) for s in re.findall(r'X+', diagonalString))
+					if 'Y' in diagonalString:
+						consecutiveY = 0 + max(len(s) for s in re.findall(r'O+', diagonalString))
+					value = value - consecutiveX + consecutiveY
+
+		antiDiagList = [[self.current_state[p - q][q]
+						 for q in range(max(p - h + 1, 0), min(p + 1, w))]
+						for p in range(h + w - 1)]
+		for i in range(0, len(antiDiagList)):
+			diagonalString = ""
+			for j in range(0, len(antiDiagList[i])):
+				diagonalString = diagonalString + antiDiagList[i][j]
+			if len(diagonalString) >= s:
+				diagonalString = diagonalString.replace(".", "")
+				if len(diagonalString) > 0:
+					consecutiveX = 0
+					consecutiveY = 0
+					if 'X' in diagonalString:
+						consecutiveX = 0 + max(len(s) for s in re.findall(r'X+', diagonalString))
+					if 'Y' in diagonalString:
+						consecutiveY = 0 + max(len(s) for s in re.findall(r'O+', diagonalString))
+					value = value - consecutiveX + consecutiveY
+		return value
+
 	def input_move(self, n):
 		while True:
 			text1 = 'Enter the x coordinate (as a capital letter from A to {0}...): '.format(chr(ord('A')+n-1))
@@ -163,25 +281,23 @@ class Game:
 			self.player_turn = 'X'
 		return self.player_turn
 
-	def minimax(self, max=False, n=3, s=3, d=4, iter=0, startTime=0, t=10):
+	def minimax(self, max=False, n=3, s=3, d=4, iter=0, startTime=0, t=10, e=E1):
 		# Minimizing for 'X' and maximizing for 'O'
 		# Possible values are:
 		# -1 - win for 'X'
 		# 0  - a tie
 		# 1  - loss for 'X'
 		# We're initially setting it to 2 or -2 as worse than the worst case:
-		value = 2
+		value = 9999
 		if max:
-			value = -2
+			value = -9999
 		x = None
 		y = None
-		if iter > d:
-			return (value, x, y)
 		result = self.is_end(n, s)
 		if result == 'X':
-			return (-1, x, y)
+			return (-9999, x, y)
 		elif result == 'O':
-			return (1, x, y)
+			return (9999, x, y)
 		elif result == '.':
 			return (0, x, y)
 		for i in range(0, n):
@@ -189,41 +305,47 @@ class Game:
 				if self.current_state[i][j] == '.':
 					if max:
 						self.current_state[i][j] = 'O'
-						(v, _, _) = self.minimax(max=False, n=n, s=s, d=d, iter=iter+1, startTime=startTime, t=t)
+						(v, _, _) = self.minimax(max=False, n=n, s=s, d=d, iter=iter+1, startTime=startTime, t=t, e=e)
 						if v > value:
 							value = v
 							x = i
 							y = j
 					else:
 						self.current_state[i][j] = 'X'
-						(v, _, _) = self.minimax(max=True, n=n, s=s, d=d, iter=iter+1, startTime=startTime, t=t)
+						(v, _, _) = self.minimax(max=True, n=n, s=s, d=d, iter=iter+1, startTime=startTime, t=t, e=e)
 						if v < value:
 							value = v
 							x = i
 							y = j
 					self.current_state[i][j] = '.'
 					timeElapsed = time.time() - startTime
-					if iter > d or timeElapsed >= t-(t*0.025):
-						return (value, x, y)
-		return (value, x, y)
+					if iter > d or timeElapsed >= t - (t * 0.0075):
+						if e == self.E1:
+							return (self.e1_heuristic(n=n, s=s), x, y)
+						else:
+							return (self.e2_heuristic(n=n, s=s), x, y)
+		if e == self.E1:
+			return (self.e1_heuristic(n=n, s=s), x, y)
+		else:
+			return (self.e2_heuristic(n=n, s=s), x, y)
 
-	def alphabeta(self, alpha=-2, beta=2, max=False, n=3, s=3, d=4, iter=0, startTime=0, t=10):
+	def alphabeta(self, alpha=-2, beta=2, max=False, n=3, s=3, d=4, iter=0, startTime=0, t=10, e=E1):
 		# Minimizing for 'X' and maximizing for 'O'
 		# Possible values are:
 		# -1 - win for 'X'
 		# 0  - a tie
 		# 1  - loss for 'X'
 		# We're initially setting it to 2 or -2 as worse than the worst case:
-		value = 2
+		value = 9999
 		if max:
-			value = -2
+			value = -9999
 		x = None
 		y = None
 		result = self.is_end(n, s)
 		if result == 'X':
-			return (-1, x, y)
+			return (-9999, x, y)
 		elif result == 'O':
-			return (1, x, y)
+			return (9999, x, y)
 		elif result == '.':
 			return (0, x, y)
 		for i in range(0, n):
@@ -231,22 +353,19 @@ class Game:
 				if self.current_state[i][j] == '.':
 					if max:
 						self.current_state[i][j] = 'O'
-						(v, _, _) = self.alphabeta(alpha, beta, max=False, n=n, s=s, d=d, iter=iter+1, startTime=startTime, t=t)
+						(v, _, _) = self.alphabeta(alpha, beta, max=False, n=n, s=s, d=d, iter=iter+1, startTime=startTime, t=t, e=e)
 						if v > value:
 							value = v
 							x = i
 							y = j
 					else:
 						self.current_state[i][j] = 'X'
-						(v, _, _) = self.alphabeta(alpha, beta, max=True, n=n, s=s, d=d, iter=iter+1, startTime=startTime, t=t)
+						(v, _, _) = self.alphabeta(alpha, beta, max=True, n=n, s=s, d=d, iter=iter+1, startTime=startTime, t=t, e=e)
 						if v < value:
 							value = v
 							x = i
 							y = j
 					self.current_state[i][j] = '.'
-					timeElapsed = round(time.time() - startTime, 7)
-					if iter > d or timeElapsed >= t-(t*0.025):
-						return (value, x, y)
 					if max: 
 						if value >= beta:
 							return (value, x, y)
@@ -257,7 +376,16 @@ class Game:
 							return (value, x, y)
 						if value < beta:
 							beta = value
-		return (value, x, y)
+					timeElapsed = round(time.time() - startTime, 7)
+					if iter > d or timeElapsed >= t - (t * 0.0075):
+						if e == self.E1:
+							return (self.e1_heuristic(n=n, s=s), x, y)
+						else:
+							return (self.e2_heuristic(n=n, s=s), x, y)
+		if e == self.E1:
+			return (self.e1_heuristic(n=n, s=s), x, y)
+		else:
+			return (self.e2_heuristic(n=n, s=s), x, y)
 
 	def place_blocs(self, b=0, n=3):
 		if b > 0:
@@ -297,12 +425,12 @@ class Game:
 							continue
 						else:
 							self.current_state[px][py] = '*'
-							inputX = self.convert_input_x(px)
+							inputX = self.convert_x_to_input(px)
 							blocPlacements.append(tuple([inputX, py]))
 							break
 			print("blocs ={}".format(blocPlacements))
 
-	def play(self,algo=True,player_x=None,player_o=None,n=3,s=3,d1=4,d2=4,t=10):
+	def play(self,algo=True,player_x=None,player_o=None,n=3,s=3,d1=4,d2=4,t=10,p1e=E1,p2e=E2):
 		moveNum = 0
 		if algo == True:
 			algo = self.ALPHABETA
@@ -320,14 +448,14 @@ class Game:
 			start = time.time()
 			if algo == self.MINIMAX:
 				if self.player_turn == 'X':
-					(_, x, y) = self.minimax(max=False, n=n, s=s, d=d1, iter=0, startTime=start, t=t)
+					(_, x, y) = self.minimax(max=False, n=n, s=s, d=d1, iter=0, startTime=start, t=t, e=p1e)
 				else:
-					(_, x, y) = self.minimax(max=True, n=n, s=s, d=d2, iter=0, startTime=start, t=t)
+					(_, x, y) = self.minimax(max=True, n=n, s=s, d=d2, iter=0, startTime=start, t=t, e=p2e)
 			else: # algo == self.ALPHABETA
 				if self.player_turn == 'X':
-					(m, x, y) = self.alphabeta(max=False, n=n, s=s, d=d1, iter=0, startTime=start, t=t)
+					(m, x, y) = self.alphabeta(max=False, n=n, s=s, d=d1, iter=0, startTime=start, t=t, e=p1e)
 				else:
-					(m, x, y) = self.alphabeta(max=True, n=n, s=s, d=d2, iter=0, startTime=start, t=t)
+					(m, x, y) = self.alphabeta(max=True, n=n, s=s, d=d2, iter=0, startTime=start, t=t, e=p2e)
 			end = time.time()
 			if (self.player_turn == 'X' and player_x == self.HUMAN) or (self.player_turn == 'O' and player_o == self.HUMAN):
 					if self.recommend:
@@ -415,17 +543,37 @@ def receiveInputs():
 				reccoBool = True
 			elif recco != 0 and recco != 1:
 				print("Your input must be either 0 for no or 1 for yes! Please try again.")
-	return n, b, s, d1, d2, t, a, player1, player2, reccoBool
+	p1e = Game.E1
+	p1eChoice = -1
+	while p1eChoice != 0 and p1eChoice != 1:
+		p1eChoice = int(input("Choose the heuristic function for player 1. Enter 1 for e1 or 0 for e2: "))
+		if p1eChoice == 1:
+			p1e = Game.E1
+		elif p1eChoice == 0:
+			p1e = Game.E2
+		elif p1eChoice != 0 and p1eChoice != 1:
+			print("Your input must be either 0 for e2 or 1 for p1e! Please try again.")
+	p2e = Game.E2
+	p2eChoice = -1
+	while p2eChoice != 0 and p2eChoice != 1:
+		p2eChoice = int(input("Choose the heuristic function for player 2. Enter 1 for e1 or 0 for e2: "))
+		if p2eChoice == 1:
+			p2e = Game.E1
+		elif p2eChoice == 0:
+			p2e = Game.E2
+		elif p2eChoice != 0 and p2eChoice != 1:
+			print("Your input must be either 0 for p2e or 1 for p2e! Please try again.")
+	return n, b, s, d1, d2, t, a, player1, player2, reccoBool, p1e, p2e
 
 def main():
-	n, b, s, d1, d2, t, a, player1, player2, reccoBool = receiveInputs()
+	n, b, s, d1, d2, t, a, player1, player2, reccoBool, p1e, p2e = receiveInputs()
 	if (a):
 		algo = Game.MINIMAX
 	else:
 		algo = Game.ALPHABETA
 	g = Game(recommend=reccoBool, n=n)
 	g.place_blocs(b=b, n=n)
-	g.play(algo=algo,player_x=player1,player_o=player2,n=n,s=s,d1=d1,d2=d2,t=t)
+	g.play(algo=algo,player_x=player1,player_o=player2,n=n,s=s,d1=d1,d2=d2,t=t, p1e=p1e, p2e=p2e)
 
 if __name__ == "__main__":
 	main()
