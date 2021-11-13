@@ -2,7 +2,7 @@
 import re
 import time
 import random
-
+import itertools
 
 class Game:
 	MINIMAX = 0
@@ -187,10 +187,29 @@ class Game:
 				value = value - diagonalString.count('X') + diagonalString.count('O')
 		return value
 
-	def e2_heuristic(self, n=3, s=3): #to be improved
-		# Simple heuristic optimized for X
+	# helper functions for e2
+	def listOfCloseToWinning(self, maxLength=3, winningString='XX'):
+		listOfClose = []
+		for i in range(maxLength + 1):
+			combination = winningString.rjust(i, '.')
+			combination = combination.ljust(maxLength, '.')
+			if len(combination) <= maxLength and combination not in listOfClose:
+				listOfClose.append(combination)
+		return listOfClose
+
+
+	def e2_heuristic(self, n=3, s=3):
+		# Slightly more complex heuristic, biased on defensive
 		# Lower value is better for X
 		# Higher value is better for O
+		winningStringX = 'X'*(s-2)
+		closeToWinX = self.listOfCloseToWinning(maxLength=s,winningString=winningStringX)
+		winningStringO = 'O'*(s-2)
+		closeToWinO = self.listOfCloseToWinning(maxLength=s,winningString=winningStringO)
+		denialOChars = 'X'*(s-1) + 'O'
+		denialXChars = 'X'*(s-1) + 'X'
+		denialO = list(set(''.join(p) for p in itertools.permutations(denialOChars)))
+		denialX = list(set(''.join(p) for p in itertools.permutations(denialXChars)))
 		value = 0
 		# Vertical
 		transposedArray = [list(i) for i in zip(*self.current_state)]
@@ -198,7 +217,16 @@ class Game:
 			verticalString = ""
 			for j in range(0, n):
 				verticalString = verticalString + transposedArray[i][j]
-			verticalString = verticalString.replace(".","")
+			if verticalString in closeToWinX:
+				value = value - 15
+			if verticalString in closeToWinO:
+				value = value + 15
+			for den in denialX:
+				if den in verticalString:
+					value = value - 35
+			for den in denialO:
+				if den in verticalString:
+					value = value + 35
 			if len(verticalString) > 0:
 				consecutiveX = 0
 				consecutiveY = 0
@@ -216,11 +244,24 @@ class Game:
 			if len(horizontalString) > 0:
 				consecutiveX = 0
 				consecutiveY = 0
-				if 'X' in horizontalString:
-					consecutiveX = 0 + max(len(s) for s in re.findall(r'X+', horizontalString))
-				if 'Y' in horizontalString:
-					consecutiveY = 0 + max(len(s) for s in re.findall(r'O+', horizontalString))
-				value = value - consecutiveX + consecutiveY
+				if horizontalString in closeToWinX:
+					value = value - 15
+				if horizontalString in closeToWinO:
+					value = value + 15
+				for den in denialX:
+					if den in horizontalString:
+						value = value - 35
+				for den in denialO:
+					if den in horizontalString:
+						value = value + 35
+				if len(horizontalString) > 0:
+					consecutiveX = 0
+					consecutiveY = 0
+					if 'X' in horizontalString:
+						consecutiveX = 0 + max(len(s) for s in re.findall(r'X+', horizontalString))
+					if 'Y' in horizontalString:
+						consecutiveY = 0 + max(len(s) for s in re.findall(r'O+', horizontalString))
+					value = value - consecutiveX + consecutiveY
 		# Diagonal win
 		h, w = len(self.current_state), len(self.current_state[0])
 
@@ -232,7 +273,16 @@ class Game:
 			for j in range(0, len(diagList[i])):
 				diagonalString = diagonalString + diagList[i][j]
 			if len(diagonalString) >= s:
-				diagonalString = diagonalString.replace(".", "")
+				if diagonalString in closeToWinX:
+					value = value - 15
+				if diagonalString in closeToWinO:
+					value = value + 15
+				for den in denialX:
+					if den in diagonalString:
+						value = value - 35
+				for den in denialO:
+					if den in diagonalString:
+						value = value + 35
 				if len(diagonalString) > 0:
 					consecutiveX = 0
 					consecutiveY = 0
@@ -250,7 +300,16 @@ class Game:
 			for j in range(0, len(antiDiagList[i])):
 				diagonalString = diagonalString + antiDiagList[i][j]
 			if len(diagonalString) >= s:
-				diagonalString = diagonalString.replace(".", "")
+				if diagonalString in closeToWinX:
+					value = value - 15
+				if diagonalString in closeToWinO:
+					value = value + 15
+				for den in denialX:
+					if den in diagonalString:
+						value = value - 35
+				for den in denialO:
+					if den in diagonalString:
+						value = value + 35
 				if len(diagonalString) > 0:
 					consecutiveX = 0
 					consecutiveY = 0
@@ -288,9 +347,9 @@ class Game:
 		# 0  - a tie
 		# 1  - loss for 'X'
 		# We're initially setting it to 2 or -2 as worse than the worst case:
-		value = 9999
+		value = 2
 		if max:
-			value = -9999
+			value = -2
 		x = None
 		y = None
 		result = self.is_end(n, s)
@@ -303,6 +362,10 @@ class Game:
 		for i in range(0, n):
 			for j in range(0, n):
 				if self.current_state[i][j] == '.':
+					if x == None:
+						x = i
+					if y == None:
+						y = j
 					if max:
 						self.current_state[i][j] = 'O'
 						(v, _, _) = self.minimax(max=False, n=n, s=s, d=d, iter=iter+1, startTime=startTime, t=t, e=e)
@@ -336,9 +399,9 @@ class Game:
 		# 0  - a tie
 		# 1  - loss for 'X'
 		# We're initially setting it to 2 or -2 as worse than the worst case:
-		value = 9999
+		value = 2
 		if max:
-			value = -9999
+			value = -2
 		x = None
 		y = None
 		result = self.is_end(n, s)
@@ -351,6 +414,10 @@ class Game:
 		for i in range(0, n):
 			for j in range(0, n):
 				if self.current_state[i][j] == '.':
+					if x == None:
+						x = i
+					if y == None:
+						y = j
 					if max:
 						self.current_state[i][j] = 'O'
 						(v, _, _) = self.alphabeta(alpha, beta, max=False, n=n, s=s, d=d, iter=iter+1, startTime=startTime, t=t, e=e)
