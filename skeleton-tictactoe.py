@@ -207,7 +207,7 @@ class Game:
 		winningStringO = 'O'*(s-2)
 		closeToWinO = self.listOfCloseToWinning(maxLength=s,winningString=winningStringO)
 		denialOChars = 'X'*(s-1) + 'O'
-		denialXChars = 'X'*(s-1) + 'X'
+		denialXChars = 'O'*(s-1) + 'X'
 		denialO = list(set(''.join(p) for p in itertools.permutations(denialOChars)))
 		denialX = list(set(''.join(p) for p in itertools.permutations(denialXChars)))
 		value = 0
@@ -223,10 +223,10 @@ class Game:
 				value = value + 15
 			for den in denialX:
 				if den in verticalString:
-					value = value - 35
+					value = value - 50
 			for den in denialO:
 				if den in verticalString:
-					value = value + 35
+					value = value + 50
 			if len(verticalString) > 0:
 				consecutiveX = 0
 				consecutiveY = 0
@@ -250,10 +250,10 @@ class Game:
 					value = value + 15
 				for den in denialX:
 					if den in horizontalString:
-						value = value - 35
+						value = value - 50
 				for den in denialO:
 					if den in horizontalString:
-						value = value + 35
+						value = value + 50
 				if len(horizontalString) > 0:
 					consecutiveX = 0
 					consecutiveY = 0
@@ -279,10 +279,10 @@ class Game:
 					value = value + 15
 				for den in denialX:
 					if den in diagonalString:
-						value = value - 35
+						value = value - 50
 				for den in denialO:
 					if den in diagonalString:
-						value = value + 35
+						value = value + 50
 				if len(diagonalString) > 0:
 					consecutiveX = 0
 					consecutiveY = 0
@@ -306,10 +306,10 @@ class Game:
 					value = value + 15
 				for den in denialX:
 					if den in diagonalString:
-						value = value - 35
+						value = value - 50
 				for den in denialO:
 					if den in diagonalString:
-						value = value + 35
+						value = value + 50
 				if len(diagonalString) > 0:
 					consecutiveX = 0
 					consecutiveY = 0
