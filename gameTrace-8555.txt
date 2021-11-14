@@ -1,0 +1,848 @@
+n=8 b=5 s=5 t=5
+
+blocs=[('B', 4), ('H', 5), ('D', 0), ('H', 6), ('G', 1)]
+
+Player 1: AI d=2 a=False e1(regular)
+Player 2: AI d=6 a=False e2(defensive)
+
+  ABCDEFGH  (move #1)
+ +--------
+0|...*....
+1|......*.
+2|........
+3|........
+4|.*......
+5|.......*
+6|.......*
+7|........
+
+Evaluation time: 0.3548651s
+Player X under AI control plays: x = A, y = 0
+
+  ABCDEFGH  (move #2)
+ +--------
+0|X..*....
+1|......*.
+2|........
+3|........
+4|.*......
+5|.......*
+6|.......*
+7|........
+
+Evaluation time: 4.967875s
+Player O under AI control plays: x = A, y = 1
+
+  ABCDEFGH  (move #3)
+ +--------
+0|X..*....
+1|O.....*.
+2|........
+3|........
+4|.*......
+5|.......*
+6|.......*
+7|........
+
+Evaluation time: 0.297761s
+Player X under AI control plays: x = A, y = 2
+
+  ABCDEFGH  (move #4)
+ +--------
+0|X..*....
+1|O.....*.
+2|X.......
+3|........
+4|.*......
+5|.......*
+6|.......*
+7|........
+
+Evaluation time: 4.9741378s
+Player O under AI control plays: x = A, y = 3
+
+  ABCDEFGH  (move #5)
+ +--------
+0|X..*....
+1|O.....*.
+2|X.......
+3|O.......
+4|.*......
+5|.......*
+6|.......*
+7|........
+
+Evaluation time: 0.3112447s
+Player X under AI control plays: x = A, y = 4
+
+  ABCDEFGH  (move #6)
+ +--------
+0|X..*....
+1|O.....*.
+2|X.......
+3|O.......
+4|X*......
+5|.......*
+6|.......*
+7|........
+
+Evaluation time: 4.9737279s
+Player O under AI control plays: x = A, y = 5
+
+  ABCDEFGH  (move #7)
+ +--------
+0|X..*....
+1|O.....*.
+2|X.......
+3|O.......
+4|X*......
+5|O......*
+6|.......*
+7|........
+
+Evaluation time: 0.258707s
+Player X under AI control plays: x = A, y = 6
+
+  ABCDEFGH  (move #8)
+ +--------
+0|X..*....
+1|O.....*.
+2|X.......
+3|O.......
+4|X*......
+5|O......*
+6|X......*
+7|........
+
+Evaluation time: 4.980927s
+Player O under AI control plays: x = A, y = 7
+
+  ABCDEFGH  (move #9)
+ +--------
+0|X..*....
+1|O.....*.
+2|X.......
+3|O.......
+4|X*......
+5|O......*
+6|X......*
+7|O.......
+
+Evaluation time: 0.389658s
+Player X under AI control plays: x = B, y = 0
+
+  ABCDEFGH  (move #10)
+ +--------
+0|XX.*....
+1|O.....*.
+2|X.......
+3|O.......
+4|X*......
+5|O......*
+6|X......*
+7|O.......
+
+Evaluation time: 4.968796s
+Player O under AI control plays: x = B, y = 1
+
+  ABCDEFGH  (move #11)
+ +--------
+0|XX.*....
+1|OO....*.
+2|X.......
+3|O.......
+4|X*......
+5|O......*
+6|X......*
+7|O.......
+
+Evaluation time: 0.1773381s
+Player X under AI control plays: x = B, y = 2
+
+  ABCDEFGH  (move #12)
+ +--------
+0|XX.*....
+1|OO....*.
+2|XX......
+3|O.......
+4|X*......
+5|O......*
+6|X......*
+7|O.......
+
+Evaluation time: 4.9641349s
+Player O under AI control plays: x = B, y = 3
+
+  ABCDEFGH  (move #13)
+ +--------
+0|XX.*....
+1|OO....*.
+2|XX......
+3|OO......
+4|X*......
+5|O......*
+6|X......*
+7|O.......
+
+Evaluation time: 0.4734449s
+Player X under AI control plays: x = B, y = 5
+
+  ABCDEFGH  (move #14)
+ +--------
+0|XX.*....
+1|OO....*.
+2|XX......
+3|OO......
+4|X*......
+5|OX.....*
+6|X......*
+7|O.......
+
+Evaluation time: 4.964843s
+Player O under AI control plays: x = B, y = 6
+
+  ABCDEFGH  (move #15)
+ +--------
+0|XX.*....
+1|OO....*.
+2|XX......
+3|OO......
+4|X*......
+5|OX.....*
+6|XO.....*
+7|O.......
+
+Evaluation time: 0.6280313s
+Player X under AI control plays: x = C, y = 2
+
+  ABCDEFGH  (move #16)
+ +--------
+0|XX.*....
+1|OO....*.
+2|XXX.....
+3|OO......
+4|X*......
+5|OX.....*
+6|XO.....*
+7|O.......
+
+Evaluation time: 4.9729722s
+Player O under AI control plays: x = B, y = 7
+
+  ABCDEFGH  (move #17)
+ +--------
+0|XX.*....
+1|OO....*.
+2|XXX.....
+3|OO......
+4|X*......
+5|OX.....*
+6|XO.....*
+7|OO......
+
+Evaluation time: 0.179307s
+Player X under AI control plays: x = C, y = 0
+
+  ABCDEFGH  (move #18)
+ +--------
+0|XXX*....
+1|OO....*.
+2|XXX.....
+3|OO......
+4|X*......
+5|OX.....*
+6|XO.....*
+7|OO......
+
+Evaluation time: 4.9690192s
+Player O under AI control plays: x = C, y = 1
+
+  ABCDEFGH  (move #19)
+ +--------
+0|XXX*....
+1|OOO...*.
+2|XXX.....
+3|OO......
+4|X*......
+5|OX.....*
+6|XO.....*
+7|OO......
+
+Evaluation time: 0.1180499s
+Player X under AI control plays: x = C, y = 3
+
+  ABCDEFGH  (move #20)
+ +--------
+0|XXX*....
+1|OOO...*.
+2|XXX.....
+3|OOX.....
+4|X*......
+5|OX.....*
+6|XO.....*
+7|OO......
+
+Evaluation time: 4.9679041s
+Player O under AI control plays: x = C, y = 4
+
+  ABCDEFGH  (move #21)
+ +--------
+0|XXX*....
+1|OOO...*.
+2|XXX.....
+3|OOX.....
+4|X*O.....
+5|OX.....*
+6|XO.....*
+7|OO......
+
+Evaluation time: 0.108423s
+Player X under AI control plays: x = C, y = 5
+
+  ABCDEFGH  (move #22)
+ +--------
+0|XXX*....
+1|OOO...*.
+2|XXX.....
+3|OOX.....
+4|X*O.....
+5|OXX....*
+6|XO.....*
+7|OO......
+
+Evaluation time: 4.967653s
+Player O under AI control plays: x = C, y = 6
+
+  ABCDEFGH  (move #23)
+ +--------
+0|XXX*....
+1|OOO...*.
+2|XXX.....
+3|OOX.....
+4|X*O.....
+5|OXX....*
+6|XOO....*
+7|OO......
+
+Evaluation time: 0.1073108s
+Player X under AI control plays: x = C, y = 7
+
+  ABCDEFGH  (move #24)
+ +--------
+0|XXX*....
+1|OOO...*.
+2|XXX.....
+3|OOX.....
+4|X*O.....
+5|OXX....*
+6|XOO....*
+7|OOX.....
+
+Evaluation time: 4.9680099s
+Player O under AI control plays: x = D, y = 1
+
+  ABCDEFGH  (move #25)
+ +--------
+0|XXX*....
+1|OOOO..*.
+2|XXX.....
+3|OOX.....
+4|X*O.....
+5|OXX....*
+6|XOO....*
+7|OOX.....
+
+Evaluation time: 0.1078088s
+Player X under AI control plays: x = E, y = 1
+
+  ABCDEFGH  (move #26)
+ +--------
+0|XXX*....
+1|OOOOX.*.
+2|XXX.....
+3|OOX.....
+4|X*O.....
+5|OXX....*
+6|XOO....*
+7|OOX.....
+
+Evaluation time: 4.9698439s
+Player O under AI control plays: x = D, y = 2
+
+  ABCDEFGH  (move #27)
+ +--------
+0|XXX*....
+1|OOOOX.*.
+2|XXXO....
+3|OOX.....
+4|X*O.....
+5|OXX....*
+6|XOO....*
+7|OOX.....
+
+Evaluation time: 0.0843978s
+Player X under AI control plays: x = D, y = 3
+
+  ABCDEFGH  (move #28)
+ +--------
+0|XXX*....
+1|OOOOX.*.
+2|XXXO....
+3|OOXX....
+4|X*O.....
+5|OXX....*
+6|XOO....*
+7|OOX.....
+
+Evaluation time: 4.964288s
+Player O under AI control plays: x = D, y = 4
+
+  ABCDEFGH  (move #29)
+ +--------
+0|XXX*....
+1|OOOOX.*.
+2|XXXO....
+3|OOXX....
+4|X*OO....
+5|OXX....*
+6|XOO....*
+7|OOX.....
+
+Evaluation time: 0.0607228s
+Player X under AI control plays: x = D, y = 5
+
+  ABCDEFGH  (move #30)
+ +--------
+0|XXX*....
+1|OOOOX.*.
+2|XXXO....
+3|OOXX....
+4|X*OO....
+5|OXXX...*
+6|XOO....*
+7|OOX.....
+
+Evaluation time: 4.9665091s
+Player O under AI control plays: x = D, y = 6
+
+  ABCDEFGH  (move #31)
+ +--------
+0|XXX*....
+1|OOOOX.*.
+2|XXXO....
+3|OOXX....
+4|X*OO....
+5|OXXX...*
+6|XOOO...*
+7|OOX.....
+
+Evaluation time: 0.0655608s
+Player X under AI control plays: x = D, y = 7
+
+  ABCDEFGH  (move #32)
+ +--------
+0|XXX*....
+1|OOOOX.*.
+2|XXXO....
+3|OOXX....
+4|X*OO....
+5|OXXX...*
+6|XOOO...*
+7|OOXX....
+
+Evaluation time: 4.9651501s
+Player O under AI control plays: x = E, y = 0
+
+  ABCDEFGH  (move #33)
+ +--------
+0|XXX*O...
+1|OOOOX.*.
+2|XXXO....
+3|OOXX....
+4|X*OO....
+5|OXXX...*
+6|XOOO...*
+7|OOXX....
+
+Evaluation time: 0.043443s
+Player X under AI control plays: x = E, y = 2
+
+  ABCDEFGH  (move #34)
+ +--------
+0|XXX*O...
+1|OOOOX.*.
+2|XXXOX...
+3|OOXX....
+4|X*OO....
+5|OXXX...*
+6|XOOO...*
+7|OOXX....
+
+Evaluation time: 4.9665601s
+Player O under AI control plays: x = E, y = 3
+
+  ABCDEFGH  (move #35)
+ +--------
+0|XXX*O...
+1|OOOOX.*.
+2|XXXOX...
+3|OOXXO...
+4|X*OO....
+5|OXXX...*
+6|XOOO...*
+7|OOXX....
+
+Evaluation time: 0.0378399s
+Player X under AI control plays: x = E, y = 4
+
+  ABCDEFGH  (move #36)
+ +--------
+0|XXX*O...
+1|OOOOX.*.
+2|XXXOX...
+3|OOXXO...
+4|X*OOX...
+5|OXXX...*
+6|XOOO...*
+7|OOXX....
+
+Evaluation time: 4.9658229s
+Player O under AI control plays: x = E, y = 5
+
+  ABCDEFGH  (move #37)
+ +--------
+0|XXX*O...
+1|OOOOX.*.
+2|XXXOX...
+3|OOXXO...
+4|X*OOX...
+5|OXXXO..*
+6|XOOO...*
+7|OOXX....
+
+Evaluation time: 0.039372s
+Player X under AI control plays: x = E, y = 6
+
+  ABCDEFGH  (move #38)
+ +--------
+0|XXX*O...
+1|OOOOX.*.
+2|XXXOX...
+3|OOXXO...
+4|X*OOX...
+5|OXXXO..*
+6|XOOOX..*
+7|OOXX....
+
+Evaluation time: 4.967418s
+Player O under AI control plays: x = E, y = 7
+
+  ABCDEFGH  (move #39)
+ +--------
+0|XXX*O...
+1|OOOOX.*.
+2|XXXOX...
+3|OOXXO...
+4|X*OOX...
+5|OXXXO..*
+6|XOOOX..*
+7|OOXXO...
+
+Evaluation time: 0.0327082s
+Player X under AI control plays: x = F, y = 0
+
+  ABCDEFGH  (move #40)
+ +--------
+0|XXX*OX..
+1|OOOOX.*.
+2|XXXOX...
+3|OOXXO...
+4|X*OOX...
+5|OXXXO..*
+6|XOOOX..*
+7|OOXXO...
+
+Evaluation time: 4.9651923s
+Player O under AI control plays: x = F, y = 1
+
+  ABCDEFGH  (move #41)
+ +--------
+0|XXX*OX..
+1|OOOOXO*.
+2|XXXOX...
+3|OOXXO...
+4|X*OOX...
+5|OXXXO..*
+6|XOOOX..*
+7|OOXXO...
+
+Evaluation time: 0.0271471s
+Player X under AI control plays: x = F, y = 2
+
+  ABCDEFGH  (move #42)
+ +--------
+0|XXX*OX..
+1|OOOOXO*.
+2|XXXOXX..
+3|OOXXO...
+4|X*OOX...
+5|OXXXO..*
+6|XOOOX..*
+7|OOXXO...
+
+Evaluation time: 4.963666s
+Player O under AI control plays: x = F, y = 3
+
+  ABCDEFGH  (move #43)
+ +--------
+0|XXX*OX..
+1|OOOOXO*.
+2|XXXOXX..
+3|OOXXOO..
+4|X*OOX...
+5|OXXXO..*
+6|XOOOX..*
+7|OOXXO...
+
+Evaluation time: 0.0229471s
+Player X under AI control plays: x = F, y = 4
+
+  ABCDEFGH  (move #44)
+ +--------
+0|XXX*OX..
+1|OOOOXO*.
+2|XXXOXX..
+3|OOXXOO..
+4|X*OOXX..
+5|OXXXO..*
+6|XOOOX..*
+7|OOXXO...
+
+Evaluation time: 4.9657631s
+Player O under AI control plays: x = F, y = 5
+
+  ABCDEFGH  (move #45)
+ +--------
+0|XXX*OX..
+1|OOOOXO*.
+2|XXXOXX..
+3|OOXXOO..
+4|X*OOXX..
+5|OXXXOO.*
+6|XOOOX..*
+7|OOXXO...
+
+Evaluation time: 0.0262008s
+Player X under AI control plays: x = F, y = 6
+
+  ABCDEFGH  (move #46)
+ +--------
+0|XXX*OX..
+1|OOOOXO*.
+2|XXXOXX..
+3|OOXXOO..
+4|X*OOXX..
+5|OXXXOO.*
+6|XOOOXX.*
+7|OOXXO...
+
+Evaluation time: 3.001009s
+Player O under AI control plays: x = F, y = 7
+
+  ABCDEFGH  (move #47)
+ +--------
+0|XXX*OX..
+1|OOOOXO*.
+2|XXXOXX..
+3|OOXXOO..
+4|X*OOXX..
+5|OXXXOO.*
+6|XOOOXX.*
+7|OOXXOO..
+
+Evaluation time: 0.0156107s
+Player X under AI control plays: x = G, y = 0
+
+  ABCDEFGH  (move #48)
+ +--------
+0|XXX*OXX.
+1|OOOOXO*.
+2|XXXOXX..
+3|OOXXOO..
+4|X*OOXX..
+5|OXXXOO.*
+6|XOOOXX.*
+7|OOXXOO..
+
+Evaluation time: 3.240031s
+Player O under AI control plays: x = G, y = 2
+
+  ABCDEFGH  (move #49)
+ +--------
+0|XXX*OXX.
+1|OOOOXO*.
+2|XXXOXXO.
+3|OOXXOO..
+4|X*OOXX..
+5|OXXXOO.*
+6|XOOOXX.*
+7|OOXXOO..
+
+Evaluation time: 0.01086s
+Player X under AI control plays: x = G, y = 3
+
+  ABCDEFGH  (move #50)
+ +--------
+0|XXX*OXX.
+1|OOOOXO*.
+2|XXXOXXO.
+3|OOXXOOX.
+4|X*OOXX..
+5|OXXXOO.*
+6|XOOOXX.*
+7|OOXXOO..
+
+Evaluation time: 1.3065109s
+Player O under AI control plays: x = G, y = 4
+
+  ABCDEFGH  (move #51)
+ +--------
+0|XXX*OXX.
+1|OOOOXO*.
+2|XXXOXXO.
+3|OOXXOOX.
+4|X*OOXXO.
+5|OXXXOO.*
+6|XOOOXX.*
+7|OOXXOO..
+
+Evaluation time: 0.0091038s
+Player X under AI control plays: x = G, y = 5
+
+  ABCDEFGH  (move #52)
+ +--------
+0|XXX*OXX.
+1|OOOOXO*.
+2|XXXOXXO.
+3|OOXXOOX.
+4|X*OOXXO.
+5|OXXXOOX*
+6|XOOOXX.*
+7|OOXXOO..
+
+Evaluation time: 0.108216s
+Player O under AI control plays: x = G, y = 6
+
+  ABCDEFGH  (move #53)
+ +--------
+0|XXX*OXX.
+1|OOOOXO*.
+2|XXXOXXO.
+3|OOXXOOX.
+4|X*OOXXO.
+5|OXXXOOX*
+6|XOOOXXO*
+7|OOXXOO..
+
+Evaluation time: 0.00506s
+Player X under AI control plays: x = G, y = 7
+
+  ABCDEFGH  (move #54)
+ +--------
+0|XXX*OXX.
+1|OOOOXO*.
+2|XXXOXXO.
+3|OOXXOOX.
+4|X*OOXXO.
+5|OXXXOOX*
+6|XOOOXXO*
+7|OOXXOOX.
+
+Evaluation time: 0.0144157s
+Player O under AI control plays: x = H, y = 0
+
+  ABCDEFGH  (move #55)
+ +--------
+0|XXX*OXXO
+1|OOOOXO*.
+2|XXXOXXO.
+3|OOXXOOX.
+4|X*OOXXO.
+5|OXXXOOX*
+6|XOOOXXO*
+7|OOXXOOX.
+
+Evaluation time: 0.002079s
+Player X under AI control plays: x = H, y = 1
+
+  ABCDEFGH  (move #56)
+ +--------
+0|XXX*OXXO
+1|OOOOXO*X
+2|XXXOXXO.
+3|OOXXOOX.
+4|X*OOXXO.
+5|OXXXOOX*
+6|XOOOXXO*
+7|OOXXOOX.
+
+Evaluation time: 0.0022531s
+Player O under AI control plays: x = H, y = 2
+
+  ABCDEFGH  (move #57)
+ +--------
+0|XXX*OXXO
+1|OOOOXO*X
+2|XXXOXXOO
+3|OOXXOOX.
+4|X*OOXXO.
+5|OXXXOOX*
+6|XOOOXXO*
+7|OOXXOOX.
+
+Evaluation time: 0.0006871s
+Player X under AI control plays: x = H, y = 3
+
+  ABCDEFGH  (move #58)
+ +--------
+0|XXX*OXXO
+1|OOOOXO*X
+2|XXXOXXOO
+3|OOXXOOXX
+4|X*OOXXO.
+5|OXXXOOX*
+6|XOOOXXO*
+7|OOXXOOX.
+
+Evaluation time: 0.0005782s
+Player O under AI control plays: x = H, y = 4
+
+  ABCDEFGH  (move #59)
+ +--------
+0|XXX*OXXO
+1|OOOOXO*X
+2|XXXOXXOO
+3|OOXXOOXX
+4|X*OOXXOO
+5|OXXXOOX*
+6|XOOOXXO*
+7|OOXXOOX.
+
+Evaluation time: 0.000216s
+Player X under AI control plays: x = H, y = 7
+
+  ABCDEFGH  (move #60)
+ +--------
+0|XXX*OXXO
+1|OOOOXO*X
+2|XXXOXXOO
+3|OOXXOOXX
+4|X*OOXXOO
+5|OXXXOOX*
+6|XOOOXXO*
+7|OOXXOOXX
+
+It's a tie!
+6(b)i:   Average evaluation time: 2.0161522150039675
+6(b)ii   Total heuristic evaluations: 286417296
+6(b)vi:  Total moves: 60

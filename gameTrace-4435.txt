@@ -1,0 +1,68 @@
+n=4 b=4 s=3 t=5
+
+blocs=[('A', 0), ('A', 3), ('D', 0), ('D', 3)]
+
+Player 1: AI d=6 a=True e1(regular)
+Player 2: AI d=6 a=True e2(defensive)
+
+  ABCD  (move #1)
+ +----
+0|*..*
+1|....
+2|....
+3|*..*
+
+Evaluation time: 4.9626732s
+Player X under AI control plays: x = A, y = 1
+
+  ABCD  (move #2)
+ +----
+0|*..*
+1|X...
+2|....
+3|*..*
+
+Evaluation time: 4.963325s
+Player O under AI control plays: x = A, y = 2
+
+  ABCD  (move #3)
+ +----
+0|*..*
+1|X...
+2|O...
+3|*..*
+
+Evaluation time: 4.962687s
+Player X under AI control plays: x = B, y = 1
+
+  ABCD  (move #4)
+ +----
+0|*..*
+1|XX..
+2|O...
+3|*..*
+
+Evaluation time: 4.9630721s
+Player O under AI control plays: x = B, y = 2
+
+  ABCD  (move #5)
+ +----
+0|*..*
+1|XX..
+2|OO..
+3|*..*
+
+Evaluation time: 1.6435499s
+Player X under AI control plays: x = C, y = 1
+
+  ABCD  (move #6)
+ +----
+0|*..*
+1|XXX.
+2|OO..
+3|*..*
+
+The winner is X!
+6(b)i:   Average evaluation time: 3.582551201184591
+6(b)ii   Total heuristic evaluations: 27582133
+6(b)vi:  Total moves: 6

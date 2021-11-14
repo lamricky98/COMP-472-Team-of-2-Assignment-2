@@ -1,0 +1,250 @@
+n=5 b=4 s=4 t=5
+
+blocs=[('B', 2), ('E', 4), ('A', 0), ('A', 2)]
+
+Player 1: AI d=6 a=False e1(regular)
+Player 2: AI d=6 a=False e2(defensive)
+
+  ABCDE  (move #1)
+ +-----
+0|*....
+1|.....
+2|**...
+3|.....
+4|....*
+
+Evaluation time: 4.9632409s
+Player X under AI control plays: x = A, y = 1
+
+  ABCDE  (move #2)
+ +-----
+0|*....
+1|X....
+2|**...
+3|.....
+4|....*
+
+Evaluation time: 4.9630537s
+Player O under AI control plays: x = A, y = 3
+
+  ABCDE  (move #3)
+ +-----
+0|*....
+1|X....
+2|**...
+3|O....
+4|....*
+
+Evaluation time: 4.963448s
+Player X under AI control plays: x = A, y = 4
+
+  ABCDE  (move #4)
+ +-----
+0|*....
+1|X....
+2|**...
+3|O....
+4|X...*
+
+Evaluation time: 4.9630289s
+Player O under AI control plays: x = B, y = 0
+
+  ABCDE  (move #5)
+ +-----
+0|*O...
+1|X....
+2|**...
+3|O....
+4|X...*
+
+Evaluation time: 3.2793651s
+Player X under AI control plays: x = B, y = 1
+
+  ABCDE  (move #6)
+ +-----
+0|*O...
+1|XX...
+2|**...
+3|O....
+4|X...*
+
+Evaluation time: 4.963109s
+Player O under AI control plays: x = B, y = 3
+
+  ABCDE  (move #7)
+ +-----
+0|*O...
+1|XX...
+2|**...
+3|OO...
+4|X...*
+
+Evaluation time: 1.6526647s
+Player X under AI control plays: x = B, y = 4
+
+  ABCDE  (move #8)
+ +-----
+0|*O...
+1|XX...
+2|**...
+3|OO...
+4|XX..*
+
+Evaluation time: 4.962882s
+Player O under AI control plays: x = C, y = 1
+
+  ABCDE  (move #9)
+ +-----
+0|*O...
+1|XXO..
+2|**...
+3|OO...
+4|XX..*
+
+Evaluation time: 2.2778151s
+Player X under AI control plays: x = C, y = 2
+
+  ABCDE  (move #10)
+ +-----
+0|*O...
+1|XXO..
+2|**X..
+3|OO...
+4|XX..*
+
+Evaluation time: 4.9632866s
+Player O under AI control plays: x = D, y = 0
+
+  ABCDE  (move #11)
+ +-----
+0|*O.O.
+1|XXO..
+2|**X..
+3|OO...
+4|XX..*
+
+Evaluation time: 0.8519638s
+Player X under AI control plays: x = C, y = 3
+
+  ABCDE  (move #12)
+ +-----
+0|*O.O.
+1|XXO..
+2|**X..
+3|OOX..
+4|XX..*
+
+Evaluation time: 4.963274s
+Player O under AI control plays: x = C, y = 0
+
+  ABCDE  (move #13)
+ +-----
+0|*OOO.
+1|XXO..
+2|**X..
+3|OOX..
+4|XX..*
+
+Evaluation time: 0.4094479s
+Player X under AI control plays: x = E, y = 0
+
+  ABCDE  (move #14)
+ +-----
+0|*OOOX
+1|XXO..
+2|**X..
+3|OOX..
+4|XX..*
+
+Evaluation time: 0.4644649s
+Player O under AI control plays: x = C, y = 4
+
+  ABCDE  (move #15)
+ +-----
+0|*OOOX
+1|XXO..
+2|**X..
+3|OOX..
+4|XXO.*
+
+Evaluation time: 0.0148411s
+Player X under AI control plays: x = D, y = 1
+
+  ABCDE  (move #16)
+ +-----
+0|*OOOX
+1|XXOX.
+2|**X..
+3|OOX..
+4|XXO.*
+
+Evaluation time: 0.0107532s
+Player O under AI control plays: x = D, y = 2
+
+  ABCDE  (move #17)
+ +-----
+0|*OOOX
+1|XXOX.
+2|**XO.
+3|OOX..
+4|XXO.*
+
+Evaluation time: 0.0090249s
+Player X under AI control plays: x = E, y = 3
+
+  ABCDE  (move #18)
+ +-----
+0|*OOOX
+1|XXOX.
+2|**XO.
+3|OOX.X
+4|XXO.*
+
+Evaluation time: 0.0028946s
+Player O under AI control plays: x = E, y = 1
+
+  ABCDE  (move #19)
+ +-----
+0|*OOOX
+1|XXOXO
+2|**XO.
+3|OOX.X
+4|XXO.*
+
+Evaluation time: 0.0003271s
+Player X under AI control plays: x = D, y = 3
+
+  ABCDE  (move #20)
+ +-----
+0|*OOOX
+1|XXOXO
+2|**XO.
+3|OOXXX
+4|XXO.*
+
+Evaluation time: 0.0002348s
+Player O under AI control plays: x = D, y = 4
+
+  ABCDE  (move #21)
+ +-----
+0|*OOOX
+1|XXOXO
+2|**XO.
+3|OOXXX
+4|XXOO*
+
+Evaluation time: 0.0001109s
+Player X under AI control plays: x = E, y = 2
+
+  ABCDE  (move #22)
+ +-----
+0|*OOOX
+1|XXOXO
+2|**XOX
+3|OOXXX
+4|XXOO*
+
+It's a tie!
+6(b)i:   Average evaluation time: 2.2126923257654365
+6(b)ii   Total heuristic evaluations: 70254352
+6(b)vi:  Total moves: 22

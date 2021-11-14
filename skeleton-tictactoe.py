@@ -175,6 +175,8 @@ class Game:
                 print('The winner is O!')
                 print('The winner is O!', file=f, flush=True)
             elif self.result == '.':
+                self.e2_win = 1
+                self.e1_win = 1
                 print("It's a tie!")
                 print("It's a tie!", file=f, flush=True)
         # self.initialize_game()
@@ -810,7 +812,7 @@ def main():
     print_initial_state(f, f_score_board, n, b, s, t, p1e, p2e, algo, blocs, d1, d2)
 
     g.play(algo=algo, player_x=player1, player_o=player2, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p1e, p2e=p2e, f=f)
-    g.play(algo=algo, player_x=player2, player_o=player1, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p2e, p2e=p1e, f=f)
+    # g.play(algo=algo, player_x=player2, player_o=player1, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p2e, p2e=p1e, f=f)
 
     out_final_summary(f, f_score_board, g)
 
