@@ -7,11 +7,15 @@ import itertools
 import copy
 
 
-def print_initial_state(f, n, b, s, t, p1e, p2e, algo, blocs, d1, d2):
+def print_initial_state(f, score_f, n, b, s, t, p1e, p2e, algo, blocs, d1, d2):
     print('n={} b={} s={} t={}\n'.format(n, b, s, t), file=f, flush=True)
     print('blocs={}\n'.format(blocs), file=f, flush=True)
     print('Player 1: AI d={} a={} {}(regular)'.format(d1, algo == 0, 'e1' if p1e == 4 else 'e2'), file=f, flush=True)
     print('Player 2: AI d={} a={} {}(defensive)'.format(d2, algo == 0, 'e1' if p2e == 4 else 'e2'), file=f, flush=True)
+    # Score file:
+    print('n={} b={} s={} t={}\n'.format(n, b, s, t), file=score_f, flush=True)
+    print('Player 1: AI d={} a={}'.format(d1, algo == 0), file=score_f, flush=True)
+    print('Player 2: AI d={} a={}'.format(d2, algo == 0), file=score_f, flush=True)
 
 
 class Game:
@@ -26,6 +30,8 @@ class Game:
     total_eval_time = 0
     total_heuri_eval_num = 0
     local_heuri_eval_num = 0
+    e1_win = 0
+    e2_win = 0
 
     def __init__(self, recommend=True, n=3, b=0):
         self.initialize_game(n)
@@ -161,9 +167,11 @@ class Game:
         # Printing the appropriate message if the game has ended
         if self.result is not None:
             if self.result == 'X':
+                self.e1_win += 1
                 print('The winner is X!')
                 print('The winner is X!', file=f, flush=True)
             elif self.result == 'O':
+                self.e2_win += 1
                 print('The winner is O!')
                 print('The winner is O!', file=f, flush=True)
             elif self.result == '.':
@@ -172,7 +180,7 @@ class Game:
         # self.initialize_game()
         return self.result
 
-    def e1_heuristic(self, n=3, s=3):
+    def e1_heuristic(self, n=3, s=3, eval_num=0):
         # Simple heuristic optimized for X
         # Lower value is better for X
         # Higher value is better for O
@@ -184,14 +192,17 @@ class Game:
             for j in range(0, n):
                 vertical_string = vertical_string + transposed_array[i][j]
             value = value - vertical_string.count('X') + vertical_string.count('O')
-        self.total_heuri_eval_num += 1
+            eval_num += 1
+            self.total_heuri_eval_num += 1
+
         # Horizontal
         for i in range(0, n):
             horizontal_string = ""
             for j in range(0, n):
                 horizontal_string = horizontal_string + self.current_state[i][j]
             value = value - horizontal_string.count('X') + horizontal_string.count('O')
-        self.total_heuri_eval_num += 1
+            eval_num += 1
+            self.total_heuri_eval_num += 1
         # Diagonal win
         h, w = len(self.current_state), len(self.current_state[0])
 
@@ -205,6 +216,7 @@ class Game:
             if len(diagonal_string) >= s:
                 value = value - diagonal_string.count('X') + diagonal_string.count('O')
             self.total_heuri_eval_num += 1
+            eval_num += 1
 
         anti_diag_list = [[self.current_state[p - q][q]
                            for q in range(max(p - h + 1, 0), min(p + 1, w))]
@@ -215,6 +227,7 @@ class Game:
                 diagonal_string = diagonal_string + anti_diag_list[i][j]
             if len(diagonal_string) >= s:
                 value = value - diagonal_string.count('X') + diagonal_string.count('O')
+                eval_num += 1
             self.total_heuri_eval_num += 1
         return value
 
@@ -634,10 +647,10 @@ class Game:
             if algo == self.MINIMAX:
                 if self.player_turn == 'X':
                     (_, x, y) = self.minimax(max=False, n=n, s=s, d=d1, iter=0, start_time=start,
-                                                                 t=t, e=p1e)
+                                             t=t, e=p1e)
                 else:
                     (_, x, y) = self.minimax(max=True, n=n, s=s, d=d2, iter=0, start_time=start,
-                                                                 t=t, e=p2e)
+                                             t=t, e=p2e)
             else:  # algo == self.ALPHABETA
                 if self.player_turn == 'X':
                     (m, x, y) = self.alphabeta(max=False, n=n, s=s, d=d1, iter=0, start_time=start, t=t, e=p1e)
@@ -762,7 +775,7 @@ def receive_inputs():
     return n, b, s, d1, d2, t, a, player1, player2, recco_bool, p1e, p2e
 
 
-def out_final_summary(f=None, g=Game()):
+def out_final_summary(f=None, f_score=None, g=Game()):
     print("6(b)i:   Average evaluation time: {}".format(g.total_eval_time / g.total_move))
     print("6(b)ii   Total heuristic evaluations: {}".format(g.total_heuri_eval_num))
     print("6(b)vi:  Total moves: {}".format(g.total_move))
@@ -770,6 +783,15 @@ def out_final_summary(f=None, g=Game()):
     print("6(b)i:   Average evaluation time: {}".format(g.total_eval_time / g.total_move), file=f, flush=True)
     print("6(b)ii   Total heuristic evaluations: {}".format(g.total_heuri_eval_num), file=f, flush=True)
     print("6(b)vi:  Total moves: {}".format(g.total_move), file=f, flush=True)
+
+    # Score file:
+    print("Total wins for heuristic e1: {} ({}%) (regular)".format(g.e1_win, g.e1_win * 10 / (g.e1_win + g.e2_win)),
+          file=f_score, flush=True)
+    print("Total wins for heuristic e2: {} ({}%) (regular)".format(g.e2_win, g.e2_win * 10 / (g.e1_win + g.e2_win)),
+          file=f_score, flush=True)
+    print("i   Average evaluation time: {}".format(g.total_eval_time / g.total_move), file=f_score, flush=True)
+    print("ii  Total heuristic evaluations: {}".format(g.total_heuri_eval_num), file=f_score, flush=True)
+    print("vi  Average moves per game: {}".format(g.total_move / 10), file=f_score, flush=True)
 
 
 def main():
@@ -785,12 +807,12 @@ def main():
     file_name = 'gameTrace-{}{}{}{}.txt'.format(n, b, s, t)
     f = open(file_name, 'w+')
     f_score_board = open(score_board_file_name, 'w+')
-    print_initial_state(f, n, b, s, t, p1e, p2e, algo, blocs, d1, d2)
+    print_initial_state(f, f_score_board, n, b, s, t, p1e, p2e, algo, blocs, d1, d2)
 
     g.play(algo=algo, player_x=player1, player_o=player2, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p1e, p2e=p2e, f=f)
     g.play(algo=algo, player_x=player2, player_o=player1, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p2e, p2e=p1e, f=f)
 
-    out_final_summary(f, g)
+    out_final_summary(f, f_score_board, g)
 
 
 if __name__ == "__main__":
