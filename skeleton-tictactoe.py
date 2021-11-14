@@ -787,9 +787,9 @@ def out_final_summary(f=None, f_score=None, g=Game()):
     print("6(b)vi:  Total moves: {}".format(g.total_move), file=f, flush=True)
 
     # Score file:
-    print("Total wins for heuristic e1: {} ({}%) (regular)".format(g.e1_win, g.e1_win * 10 / (g.e1_win + g.e2_win)),
+    print("Total wins for heuristic e1: {} ({}%) (regular)".format(g.e1_win, g.e1_win * 100 / (g.e1_win + g.e2_win)),
           file=f_score, flush=True)
-    print("Total wins for heuristic e2: {} ({}%) (regular)".format(g.e2_win, g.e2_win * 10 / (g.e1_win + g.e2_win)),
+    print("Total wins for heuristic e2: {} ({}%) (regular)".format(g.e2_win, g.e2_win * 100 / (g.e1_win + g.e2_win)),
           file=f_score, flush=True)
     print("i   Average evaluation time: {}".format(g.total_eval_time / g.total_move), file=f_score, flush=True)
     print("ii  Total heuristic evaluations: {}".format(g.total_heuri_eval_num), file=f_score, flush=True)
