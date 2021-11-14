@@ -21,6 +21,11 @@ class Game:
     AI = 3
     E1 = 4
     E2 = 5
+    Stat = {}
+    total_move = 0
+    total_eval_time = 0
+    total_heuri_eval_num = 0
+    local_heuri_eval_num = 0
 
     def __init__(self, recommend=True, n=3, b=0):
         self.initialize_game(n)
@@ -158,15 +163,12 @@ class Game:
             if self.result == 'X':
                 print('The winner is X!')
                 print('The winner is X!', file=f, flush=True)
-                sys.exit()
             elif self.result == 'O':
                 print('The winner is O!')
                 print('The winner is O!', file=f, flush=True)
-                sys.exit()
             elif self.result == '.':
                 print("It's a tie!")
                 print("It's a tie!", file=f, flush=True)
-                sys.exit()
         # self.initialize_game()
         return self.result
 
@@ -182,12 +184,14 @@ class Game:
             for j in range(0, n):
                 vertical_string = vertical_string + transposed_array[i][j]
             value = value - vertical_string.count('X') + vertical_string.count('O')
+        self.total_heuri_eval_num += 1
         # Horizontal
         for i in range(0, n):
             horizontal_string = ""
             for j in range(0, n):
                 horizontal_string = horizontal_string + self.current_state[i][j]
             value = value - horizontal_string.count('X') + horizontal_string.count('O')
+        self.total_heuri_eval_num += 1
         # Diagonal win
         h, w = len(self.current_state), len(self.current_state[0])
 
@@ -200,6 +204,7 @@ class Game:
                 diagonal_string = diagonal_string + diag_list[i][j]
             if len(diagonal_string) >= s:
                 value = value - diagonal_string.count('X') + diagonal_string.count('O')
+            self.total_heuri_eval_num += 1
 
         anti_diag_list = [[self.current_state[p - q][q]
                            for q in range(max(p - h + 1, 0), min(p + 1, w))]
@@ -210,6 +215,7 @@ class Game:
                 diagonal_string = diagonal_string + anti_diag_list[i][j]
             if len(diagonal_string) >= s:
                 value = value - diagonal_string.count('X') + diagonal_string.count('O')
+            self.total_heuri_eval_num += 1
         return value
 
     def e2_heuristic(self, n=3, s=3):
@@ -236,15 +242,19 @@ class Game:
             for j in range(0, n):
                 vertical_string = vertical_string + transposed_array[i][j]
             for near_win in close_to_win_x:
+                self.total_heuri_eval_num += 1
                 if near_win in vertical_string:
                     value = value - 15
             for near_win in close_to_win_o:
+                self.total_heuri_eval_num += 1
                 if near_win in vertical_string:
                     value = value + 15
             for den in denial_x:
+                self.total_heuri_eval_num += 1
                 if den in vertical_string:
                     value = value - 50
             for den in denial_o:
+                self.total_heuri_eval_num += 1
                 if den in vertical_string:
                     value = value + 50
             if '*' in vertical_string:
@@ -269,6 +279,7 @@ class Game:
                     value = value - consecutive_x + consecutive_y
             else:
                 value = value - vertical_string.count('X') + vertical_string.count('O')
+            self.total_heuri_eval_num += 1
         # Horizontal
         for i in range(0, n):
             horizontal_string = ""
@@ -279,15 +290,19 @@ class Game:
                 consecutive_x = 0
                 consecutive_y = 0
                 for near_win in close_to_win_x:
+                    self.total_heuri_eval_num += 1
                     if near_win in horizontal_string:
                         value = value - 15
                 for near_win in close_to_win_o:
+                    self.total_heuri_eval_num += 1
                     if near_win in horizontal_string:
                         value = value + 15
                 for den in denial_x:
+                    self.total_heuri_eval_num += 1
                     if den in horizontal_string:
                         value = value - 50
                 for den in denial_o:
+                    self.total_heuri_eval_num += 1
                     if den in horizontal_string:
                         value = value + 50
                 if '*' in horizontal_string:
@@ -312,6 +327,7 @@ class Game:
                         value = value - consecutive_x + consecutive_y
                 else:
                     value = value - horizontal_string.count('X') + horizontal_string.count('O')
+                self.total_heuri_eval_num += 1
         # Diagonal win
         h, w = len(self.current_state), len(self.current_state[0])
 
@@ -324,15 +340,19 @@ class Game:
                 diagonal_string = diagonal_string + diag_list[i][j]
             if len(diagonal_string) >= s:
                 for near_win in close_to_win_x:
+                    self.total_heuri_eval_num += 1
                     if near_win in diagonal_string:
                         value = value - 15
                 for near_win in close_to_win_o:
+                    self.total_heuri_eval_num += 1
                     if near_win in diagonal_string:
                         value = value + 15
                 for den in denial_x:
+                    self.total_heuri_eval_num += 1
                     if den in diagonal_string:
                         value = value - 50
                 for den in denial_o:
+                    self.total_heuri_eval_num += 1
                     if den in diagonal_string:
                         value = value + 50
                 if '*' in diagonal_string:
@@ -357,6 +377,7 @@ class Game:
                         value = value - consecutive_x + consecutive_y
                 else:
                     value = value - diagonal_string.count('X') + diagonal_string.count('O')
+                self.total_heuri_eval_num += 1
 
         anti_diag_list = [[self.current_state[p - q][q]
                            for q in range(max(p - h + 1, 0), min(p + 1, w))]
@@ -367,15 +388,19 @@ class Game:
                 diagonal_string = diagonal_string + anti_diag_list[i][j]
             if len(diagonal_string) >= s:
                 for near_win in close_to_win_x:
+                    self.total_heuri_eval_num += 1
                     if near_win in diagonal_string:
                         value = value - 15
                 for near_win in close_to_win_o:
+                    self.total_heuri_eval_num += 1
                     if near_win in diagonal_string:
                         value = value + 15
                 for den in denial_x:
+                    self.total_heuri_eval_num += 1
                     if den in diagonal_string:
                         value = value - 50
                 for den in denial_o:
+                    self.total_heuri_eval_num += 1
                     if den in diagonal_string:
                         value = value + 50
                 if '*' in diagonal_string:
@@ -400,6 +425,7 @@ class Game:
                         value = value - consecutive_x + consecutive_y
                 else:
                     value = value - diagonal_string.count('X') + diagonal_string.count('O')
+                self.total_heuri_eval_num += 1
         return value
 
     def input_move(self, n):
@@ -450,7 +476,8 @@ class Game:
                         y = j
                     if max:
                         self.current_state[i][j] = 'O'
-                        (v, _, _) = self.minimax(max=False, n=n, s=s, d=d, iter=iter + 1, start_time=start_time, t=t,
+                        (v, _, _) = self.minimax(max=False, n=n, s=s, d=d, iter=iter + 1,
+                                                 start_time=start_time, t=t,
                                                  e=e)
                         if v > value:
                             value = v
@@ -458,7 +485,8 @@ class Game:
                             y = j
                     else:
                         self.current_state[i][j] = 'X'
-                        (v, _, _) = self.minimax(max=True, n=n, s=s, d=d, iter=iter + 1, start_time=start_time, t=t,
+                        (v, _, _) = self.minimax(max=True, n=n, s=s, d=d, iter=iter + 1,
+                                                 start_time=start_time, t=t,
                                                  e=e)
                         if v < value:
                             value = v
@@ -587,7 +615,6 @@ class Game:
             return bloc_placements
 
     def play(self, algo=True, player_x=None, player_o=None, n=3, s=3, d1=4, d2=4, t=10, p1e=E1, p2e=E2, f=None):
-        move_num = 0
         if algo:
             algo = self.ALPHABETA
         elif not algo:
@@ -599,34 +626,41 @@ class Game:
         self.current_state = copy.deepcopy(self.bloc_snapshot)
 
         while True:
-            move_num = move_num + 1
-            self.draw_board(size=n, move_num=move_num, f=f)
+            self.total_move = self.total_move + 1
+            self.draw_board(size=n, move_num=self.total_move, f=f)
             if self.check_end(n, s, f):
                 return
             start = time.time()
             if algo == self.MINIMAX:
                 if self.player_turn == 'X':
-                    (_, x, y) = self.minimax(max=False, n=n, s=s, d=d1, iter=0, start_time=start, t=t, e=p1e)
+                    (_, x, y) = self.minimax(max=False, n=n, s=s, d=d1, iter=0, start_time=start,
+                                                                 t=t, e=p1e)
                 else:
-                    (_, x, y) = self.minimax(max=True, n=n, s=s, d=d2, iter=0, start_time=start, t=t, e=p2e)
+                    (_, x, y) = self.minimax(max=True, n=n, s=s, d=d2, iter=0, start_time=start,
+                                                                 t=t, e=p2e)
             else:  # algo == self.ALPHABETA
                 if self.player_turn == 'X':
                     (m, x, y) = self.alphabeta(max=False, n=n, s=s, d=d1, iter=0, start_time=start, t=t, e=p1e)
                 else:
                     (m, x, y) = self.alphabeta(max=True, n=n, s=s, d=d2, iter=0, start_time=start, t=t, e=p2e)
             end = time.time()
+            self.total_eval_time += end - start
             if (self.player_turn == 'X' and player_x == self.HUMAN) or (
                     self.player_turn == 'O' and player_o == self.HUMAN):
                 if self.recommend:
-                    print(F'Evaluation time: {round(end - start, 7)}s')
-                    print(F'Evaluation time: {round(end - start, 7)}s', file=f, flush=True)
+                    print(F'i:  Evaluation time: {round(end - start, 7)}s')
+                    print(F'i:  Evaluation time: {round(end - start, 7)}s', file=f, flush=True)
                     x_display = self.convert_x_to_input(x)
                     print(F'Recommended move: x = {x_display}, y = {y}', file=f, flush=True)
-                print(F'Player {self.player_turn} under Human control plays: x = {x_display}, y = {y}', file=f, flush=True)
+                    print(F'Player {self.player_turn} under Human control plays: x = {x_display}, y = {y}')
+                    print(F'Player {self.player_turn} under Human control plays: x = {x_display}, y = {y}', file=f,
+                          flush=True)
                 (x, y) = self.input_move(n)
             if (self.player_turn == 'X' and player_x == self.AI) or (self.player_turn == 'O' and player_o == self.AI):
+                print(F'Evaluation time: {round(end - start, 7)}s')
                 print(F'Evaluation time: {round(end - start, 7)}s', file=f, flush=True)
                 x_display = self.convert_x_to_input(x)
+                print(F'Player {self.player_turn} under AI control plays: x = {x_display}, y = {y}')
                 print(F'Player {self.player_turn} under AI control plays: x = {x_display}, y = {y}', file=f, flush=True)
             self.current_state[x][y] = self.player_turn
             self.switch_player()
@@ -728,6 +762,16 @@ def receive_inputs():
     return n, b, s, d1, d2, t, a, player1, player2, recco_bool, p1e, p2e
 
 
+def out_final_summary(f=None, g=Game()):
+    print("6(b)i:   Average evaluation time: {}".format(g.total_eval_time / g.total_move))
+    print("6(b)ii   Total heuristic evaluations: {}".format(g.total_heuri_eval_num))
+    print("6(b)vi:  Total moves: {}".format(g.total_move))
+
+    print("6(b)i:   Average evaluation time: {}".format(g.total_eval_time / g.total_move), file=f, flush=True)
+    print("6(b)ii   Total heuristic evaluations: {}".format(g.total_heuri_eval_num), file=f, flush=True)
+    print("6(b)vi:  Total moves: {}".format(g.total_move), file=f, flush=True)
+
+
 def main():
     n, b, s, d1, d2, t, a, player1, player2, recco_bool, p1e, p2e = receive_inputs()
     if a:
@@ -736,11 +780,17 @@ def main():
         algo = Game.MINIMAX
     g = Game(recommend=recco_bool, n=n)
     blocs = g.place_blocs(b=b, n=n)
+
+    score_board_file_name = 'scoreboard.txt'
     file_name = 'gameTrace-{}{}{}{}.txt'.format(n, b, s, t)
     f = open(file_name, 'w+')
+    f_score_board = open(score_board_file_name, 'w+')
     print_initial_state(f, n, b, s, t, p1e, p2e, algo, blocs, d1, d2)
+
     g.play(algo=algo, player_x=player1, player_o=player2, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p1e, p2e=p2e, f=f)
     g.play(algo=algo, player_x=player2, player_o=player1, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p2e, p2e=p1e, f=f)
+
+    out_final_summary(f, g)
 
 
 if __name__ == "__main__":
