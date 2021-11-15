@@ -18,12 +18,12 @@ r = 0
 def print_initial_state(f, score_f, n, b, s, t, p1e, p2e, algo, blocs, d1, d2):
     print('n={} b={} s={} t={}\n'.format(n, b, s, t), file=f, flush=True)
     print('blocs={}\n'.format(blocs), file=f, flush=True)
-    print('Player 1: AI d={} a={} {}(regular)'.format(d1, algo == 0, 'e1' if p1e == 4 else 'e2'), file=f, flush=True)
-    print('Player 2: AI d={} a={} {}(defensive)'.format(d2, algo == 0, 'e1' if p2e == 4 else 'e2'), file=f, flush=True)
+    print('Player 1: AI d={} a={} {}({})'.format(d1, algo == 1, 'e1' if p1e == 4 else 'e2', 'simple' if p1e == 4 else 'complex'), file=f, flush=True)
+    print('Player 2: AI d={} a={} {}({})'.format(d2, algo == 1, 'e1' if p2e == 4 else 'e2', 'simple' if p1e == 4 else 'complex'), file=f, flush=True)
     # Score file:
     print('n={} b={} s={} t={}\n'.format(n, b, s, t), file=score_f, flush=True)
-    print('Player 1: AI d={} a={}'.format(d1, algo == 0), file=score_f, flush=True)
-    print('Player 2: AI d={} a={}'.format(d2, algo == 0), file=score_f, flush=True)
+    print('Player 1: AI d={} a={}'.format(d1, algo == 1), file=score_f, flush=True)
+    print('Player 2: AI d={} a={}'.format(d2, algo == 1), file=score_f, flush=True)
 
 
 class Game:
@@ -1016,6 +1016,9 @@ def out_final_summary(f=None, g=Game()):
     print("6(b)iv  Average evaluation depth: {}".format(summation), file=f, flush=True)
     print("6(b)v   Average recursion depth: {}".format(round(sum(g.total_recur_depth)/len(g.total_recur_depth)),1), file=f, flush=True)
     print("6(b)vi  Total moves: {}".format(g.total_move), file=f, flush=True)
+    print("", file=f, flush=True)
+    print("====================================================", file=f, flush=True)
+    print("", file=f, flush=True)
 
 def out_scoreboard_file(f=None):
     # Score file:
@@ -1042,20 +1045,23 @@ def out_scoreboard_file(f=None):
 def main():
     for i in range(0, 10):
         # n, b, s, d1, d2, t, a, player1, player2, recco_bool, p1e, p2e = receive_inputs()
-        # blocs = g.place_blocs(b=b, n=n)
-        n, b, s, d1, d2, t, a, player1, player2, recco_bool, p1e, p2e = 5, 4, 4, 2, 6, 1, True, Game.AI, Game.AI, True, Game.E2, Game.E1
+        n, b, s, d1, d2, t, a, player1, player2, recco_bool, p1e, p2e = 8, 6, 5, 6, 6, 5, True, Game.AI, Game.AI, True, Game.E2, Game.E1
+
         if a:
             algo = Game.ALPHABETA
         else:
             algo = Game.MINIMAX
         g = Game(recommend=recco_bool, n=n)
+
+        # blocs = g.place_blocs(b=b, n=n)
         blocs = []
         g.auto_blocs(blocs=blocs, b=b, n=n)
 
         score_board_file_name = 'scoreboard.txt'
         file_name = 'gameTrace-{}{}{}{}.txt'.format(n, b, s, t)
         f = open(file_name, 'w+')
-        f_score_board = open(score_board_file_name, 'w+')
+        f_score_board = open(score_board_file_name, 'a+')
+
         print_initial_state(f, f_score_board, n, b, s, t, p1e, p2e, algo, blocs, d1, d2)
 
         g.play(algo=algo, player_x=player1, player_o=player2, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p1e, p2e=p2e, f=f)

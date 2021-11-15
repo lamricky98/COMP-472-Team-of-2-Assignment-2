@@ -2,8 +2,8 @@ n=4 b=4 s=3 t=5
 
 blocs=[(0, 0), (0, 3), (3, 0), (3, 3)]
 
-Player 1: AI d=6 a=True e2(regular)
-Player 2: AI d=6 a=True e1(defensive)
+Player 1: AI d=6 a=True e2(complex)
+Player 2: AI d=6 a=True e1(simple)
 
   ABCD  (move #1)
  +----
