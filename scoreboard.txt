@@ -1,9 +1,4 @@
-n=4 b=4 s=3 t=5
+n=8 b=5 s=5 t=1
 
-Player 1: AI d=6 a=True
-Player 2: AI d=6 a=True
-Total wins for heuristic e1: 1 (100.0%) (regular)
-Total wins for heuristic e2: 0 (0.0%) (regular)
-i   Average evaluation time: 3.582551201184591
-ii  Total heuristic evaluations: 27582133
-vi  Average moves per game: 0.6
+Player 1: AI d=2 a=False
+Player 2: AI d=6 a=False

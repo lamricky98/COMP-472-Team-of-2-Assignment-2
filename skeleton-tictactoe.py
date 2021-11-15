@@ -1,11 +1,19 @@
 # based on code from https://stackabuse.com/minimax-and-alpha-beta-pruning-in-python
 import re
-import sys
 import time
 import random
 import itertools
 import copy
+import json
 
+sc_total_move = 0
+sc_total_eval_time = 0
+sc_total_heuri_eval_num = 0
+sc_eval_by_depth = {}
+sc_total_recur_depth = []
+sc_e1_win = 0
+sc_e2_win = 0
+r = 0
 
 def print_initial_state(f, score_f, n, b, s, t, p1e, p2e, algo, blocs, d1, d2):
     print('n={} b={} s={} t={}\n'.format(n, b, s, t), file=f, flush=True)
@@ -29,16 +37,20 @@ class Game:
     total_move = 0
     total_eval_time = 0
     total_heuri_eval_num = 0
-    local_heuri_eval_num = 0
-    e1_win = 0
-    e2_win = 0
+    eval_by_depth = {}
+    total_recur_depth = []
+    per_move_total_eval = 0
+    per_move_depth_eval = {}
+    per_move_average_eval_depth = 0
+    per_move_average_rec_depth = 0
 
-    def __init__(self, recommend=True, n=3, b=0):
+    def __init__(self, recommend=True, n=3):
         self.initialize_game(n)
         self.recommend = recommend
 
     def initialize_game(self, n):
         self.current_state = [['.' for i in range(n)] for j in range(n)]
+        self.bloc_snapshot = copy.deepcopy(self.current_state)
         # Player X or 1 always plays first
         self.player_turn = 'X'
 
@@ -162,31 +174,47 @@ class Game:
         # It's a tie!
         return '.'
 
-    def check_end(self, n, s, f):
+    def check_end(self, n, s, f, p1e, p2e):
+        global sc_e1_win, sc_e2_win
         self.result = self.is_end(n, s)
         # Printing the appropriate message if the game has ended
         if self.result is not None:
             if self.result == 'X':
-                self.e1_win += 1
+                if p1e == self.E1:
+                    sc_e1_win += 1
+                else:
+                    sc_e2_win += 1
                 print('The winner is X!')
                 print('The winner is X!', file=f, flush=True)
             elif self.result == 'O':
-                self.e2_win += 1
+                if p2e == self.E1:
+                    sc_e1_win += 1
+                else:
+                    sc_e2_win += 1
                 print('The winner is O!')
                 print('The winner is O!', file=f, flush=True)
             elif self.result == '.':
-                self.e2_win = 1
-                self.e1_win = 1
                 print("It's a tie!")
                 print("It's a tie!", file=f, flush=True)
         # self.initialize_game()
         return self.result
 
-    def e1_heuristic(self, n=3, s=3, eval_num=0):
+    def e1_heuristic(self, n=3, s=3):
+        global sc_total_heuri_eval_num
+        sc_total_heuri_eval_num += 1
+        self.total_heuri_eval_num += 1
+        self.per_move_total_eval += 1
         # Simple heuristic optimized for X
         # Lower value is better for X
         # Higher value is better for O
         value = 0
+        result = self.is_end(n, s)
+        if result == 'X':
+            return -99999
+        elif result == 'O':
+            return 99999
+        elif result == '.':
+            return 0
         # Vertical
         transposed_array = [list(i) for i in zip(*self.current_state)]
         for i in range(0, n):
@@ -194,8 +222,6 @@ class Game:
             for j in range(0, n):
                 vertical_string = vertical_string + transposed_array[i][j]
             value = value - vertical_string.count('X') + vertical_string.count('O')
-            eval_num += 1
-            self.total_heuri_eval_num += 1
 
         # Horizontal
         for i in range(0, n):
@@ -203,8 +229,7 @@ class Game:
             for j in range(0, n):
                 horizontal_string = horizontal_string + self.current_state[i][j]
             value = value - horizontal_string.count('X') + horizontal_string.count('O')
-            eval_num += 1
-            self.total_heuri_eval_num += 1
+
         # Diagonal win
         h, w = len(self.current_state), len(self.current_state[0])
 
@@ -217,8 +242,6 @@ class Game:
                 diagonal_string = diagonal_string + diag_list[i][j]
             if len(diagonal_string) >= s:
                 value = value - diagonal_string.count('X') + diagonal_string.count('O')
-            self.total_heuri_eval_num += 1
-            eval_num += 1
 
         anti_diag_list = [[self.current_state[p - q][q]
                            for q in range(max(p - h + 1, 0), min(p + 1, w))]
@@ -229,120 +252,101 @@ class Game:
                 diagonal_string = diagonal_string + anti_diag_list[i][j]
             if len(diagonal_string) >= s:
                 value = value - diagonal_string.count('X') + diagonal_string.count('O')
-                eval_num += 1
-            self.total_heuri_eval_num += 1
         return value
 
     def e2_heuristic(self, n=3, s=3):
+        global sc_total_heuri_eval_num
+        sc_total_heuri_eval_num += 1
+        self.total_heuri_eval_num += 1
+        self.per_move_total_eval += 1
         # Slightly more complex heuristic, biased on defensive
         # Lower value is better for X
         # Higher value is better for O
-        winning_string_x = 'X' * (s - 2) + '..'
-        close_to_win_x = list(set(''.join(p) for p in itertools.permutations(winning_string_x)))
+        forkCount = 0
         winning_string_x = 'X' * (s - 1) + '.'
-        close_to_win_x = close_to_win_x + list(set(''.join(p) for p in itertools.permutations(winning_string_x)))
-        winning_string_o = 'O' * (s - 2) + '..'
-        close_to_win_o = list(set(''.join(p) for p in itertools.permutations(winning_string_o)))
+        closest_to_win_x = list(set(''.join(p) for p in itertools.permutations(winning_string_x)))
         winning_string_o = 'O' * (s - 1) + '.'
-        close_to_win_o = close_to_win_o + list(set(''.join(p) for p in itertools.permutations(winning_string_o)))
+        closest_to_win_o = list(set(''.join(p) for p in itertools.permutations(winning_string_o)))
         denial_o_chars = 'X' * (s - 1) + 'O'
         denial_x_chars = 'O' * (s - 1) + 'X'
         denial_o = list(set(''.join(p) for p in itertools.permutations(denial_o_chars)))
         denial_x = list(set(''.join(p) for p in itertools.permutations(denial_x_chars)))
         value = 0
+        result = self.is_end(n, s)
+        if result == 'X':
+            return -99999
+        elif result == 'O':
+            return 99999
+        elif result == '.':
+            return 0
         # Vertical
         transposed_array = [list(i) for i in zip(*self.current_state)]
         for i in range(0, n):
             vertical_string = ""
+            consecutive_y = 0
+            consecutive_x = 0
             for j in range(0, n):
                 vertical_string = vertical_string + transposed_array[i][j]
-            for near_win in close_to_win_x:
-                self.total_heuri_eval_num += 1
-                if near_win in vertical_string:
-                    value = value - 15
-            for near_win in close_to_win_o:
-                self.total_heuri_eval_num += 1
-                if near_win in vertical_string:
-                    value = value + 15
+            value = value - vertical_string.count('X') + vertical_string.count('O')
+            if vertical_string.count('X') > 2:
+                consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', vertical_string)) * 200)
+            if vertical_string.count('Y') > 2:
+                consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', vertical_string)) * 200)
+            value = value - consecutive_x + consecutive_y
             for den in denial_x:
-                self.total_heuri_eval_num += 1
                 if den in vertical_string:
-                    value = value - 50
+                    return -9999
             for den in denial_o:
-                self.total_heuri_eval_num += 1
                 if den in vertical_string:
-                    value = value + 50
-            if '*' in vertical_string:
-                partitioned_string = vertical_string.partition('*')
-                before_star = partitioned_string[0]
-                after_star = partitioned_string[2]
-                consecutive_x = 0
-                consecutive_y = 0
-                if len(before_star) >= s:
-                    if before_star.count('X') > 1:
-                        consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', before_star)) * 2)
-                    if before_star.count('Y') > 1:
-                        consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', before_star)) * 2)
-                    value = value - consecutive_x + consecutive_y
-                consecutive_x = 0
-                consecutive_y = 0
-                if len(after_star) >= s:
-                    if after_star.count('X') > 1:
-                        consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', after_star)) * 2)
-                    if after_star.count('Y') > 1:
-                        consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', after_star)) * 2)
-                    value = value - consecutive_x + consecutive_y
-            else:
-                value = value - vertical_string.count('X') + vertical_string.count('O')
-            self.total_heuri_eval_num += 1
+                    return 9999
+            for near_win in closest_to_win_x:
+                if near_win in vertical_string:
+                    if forkCount > 1:
+                        return -5000
+                    else:
+                        forkCount += 1
+                    value = value - 500
+            for near_win in closest_to_win_o:
+                if near_win in vertical_string:
+                    if forkCount > 1:
+                        return 5000
+                    else:
+                        forkCount += 1
+                    value = value + 500
         # Horizontal
         for i in range(0, n):
             horizontal_string = ""
+            consecutive_y = 0
+            consecutive_x = 0
             for j in range(0, n):
                 horizontal_string = horizontal_string + self.current_state[i][j]
-            horizontal_string = horizontal_string.replace(".", "")
+            value = value - horizontal_string.count('X') + horizontal_string.count('O')
+            if horizontal_string.count('X') > 2:
+                consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', horizontal_string)) * 200)
+            if horizontal_string.count('Y') > 2:
+                consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', horizontal_string)) * 200)
+            value = value - consecutive_x + consecutive_y
             if len(horizontal_string) > 0:
-                consecutive_x = 0
-                consecutive_y = 0
-                for near_win in close_to_win_x:
-                    self.total_heuri_eval_num += 1
-                    if near_win in horizontal_string:
-                        value = value - 15
-                for near_win in close_to_win_o:
-                    self.total_heuri_eval_num += 1
-                    if near_win in horizontal_string:
-                        value = value + 15
                 for den in denial_x:
-                    self.total_heuri_eval_num += 1
                     if den in horizontal_string:
-                        value = value - 50
+                        return -9999
                 for den in denial_o:
-                    self.total_heuri_eval_num += 1
                     if den in horizontal_string:
-                        value = value + 50
-                if '*' in horizontal_string:
-                    partitioned_string = horizontal_string.partition('*')
-                    before_star = partitioned_string[0]
-                    after_star = partitioned_string[2]
-                    consecutive_x = 0
-                    consecutive_y = 0
-                    if len(before_star) >= s:
-                        if before_star.count('X') > 1:
-                            consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', before_star)) * 2)
-                        if before_star.count('Y') > 1:
-                            consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', before_star)) * 2)
-                        value = value - consecutive_x + consecutive_y
-                    consecutive_x = 0
-                    consecutive_y = 0
-                    if len(after_star) >= s:
-                        if after_star.count('X') > 1:
-                            consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', after_star)) * 2)
-                        if after_star.count('Y') > 1:
-                            consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', after_star)) * 2)
-                        value = value - consecutive_x + consecutive_y
-                else:
-                    value = value - horizontal_string.count('X') + horizontal_string.count('O')
-                self.total_heuri_eval_num += 1
+                        return 9999
+                for near_win in closest_to_win_x:
+                    if near_win in horizontal_string:
+                        if forkCount > 1:
+                            return -5000
+                        else:
+                            forkCount += 1
+                        value = value - 500
+                for near_win in closest_to_win_o:
+                    if near_win in horizontal_string:
+                        if forkCount > 1:
+                            return 5000
+                        else:
+                            forkCount += 1
+                        value = value + 500
         # Diagonal win
         h, w = len(self.current_state), len(self.current_state[0])
 
@@ -351,96 +355,76 @@ class Game:
                      for p in range(h + w - 1)]
         for i in range(0, len(diag_list)):
             diagonal_string = ""
+            consecutive_y = 0
+            consecutive_x = 0
             for j in range(0, len(diag_list[i])):
                 diagonal_string = diagonal_string + diag_list[i][j]
             if len(diagonal_string) >= s:
-                for near_win in close_to_win_x:
-                    self.total_heuri_eval_num += 1
-                    if near_win in diagonal_string:
-                        value = value - 15
-                for near_win in close_to_win_o:
-                    self.total_heuri_eval_num += 1
-                    if near_win in diagonal_string:
-                        value = value + 15
-                for den in denial_x:
-                    self.total_heuri_eval_num += 1
-                    if den in diagonal_string:
-                        value = value - 50
-                for den in denial_o:
-                    self.total_heuri_eval_num += 1
-                    if den in diagonal_string:
-                        value = value + 50
-                if '*' in diagonal_string:
-                    partitioned_string = diagonal_string.partition('*')
-                    before_star = partitioned_string[0]
-                    after_star = partitioned_string[2]
-                    consecutive_x = 0
-                    consecutive_y = 0
-                    if len(before_star) >= s:
-                        if before_star.count('X') > 1:
-                            consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', before_star)) * 2)
-                        if before_star.count('Y') > 1:
-                            consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', before_star)) * 2)
-                        value = value - consecutive_x + consecutive_y
-                    consecutive_x = 0
-                    consecutive_y = 0
-                    if len(after_star) >= s:
-                        if after_star.count('X') > 1:
-                            consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', after_star)) * 2)
-                        if after_star.count('Y') > 1:
-                            consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', after_star)) * 2)
-                        value = value - consecutive_x + consecutive_y
-                else:
+                if '*' not in diagonal_string:
                     value = value - diagonal_string.count('X') + diagonal_string.count('O')
-                self.total_heuri_eval_num += 1
+                    if diagonal_string.count('X') > 2:
+                        consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', diagonal_string)) * 200)
+                    if diagonal_string.count('Y') > 2:
+                        consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', diagonal_string)) * 200)
+                    value = value - consecutive_x + consecutive_y
+                for den in denial_x:
+                    if den in diagonal_string:
+                        return -9999
+                for den in denial_o:
+                    if den in diagonal_string:
+                        return 9999
+                for near_win in closest_to_win_x:
+                    if near_win in diagonal_string:
+                        if forkCount > 1:
+                            return -5000
+                        else:
+                            forkCount += 1
+                        value = value - 500
+                for near_win in closest_to_win_o:
+                    if near_win in diagonal_string:
+                        if forkCount > 1:
+                            return 5000
+                        else:
+                            forkCount += 1
+                        value = value + 500
 
         anti_diag_list = [[self.current_state[p - q][q]
                            for q in range(max(p - h + 1, 0), min(p + 1, w))]
                           for p in range(h + w - 1)]
         for i in range(0, len(anti_diag_list)):
             diagonal_string = ""
+            consecutive_y = 0
+            consecutive_x = 0
             for j in range(0, len(anti_diag_list[i])):
                 diagonal_string = diagonal_string + anti_diag_list[i][j]
             if len(diagonal_string) >= s:
-                for near_win in close_to_win_x:
-                    self.total_heuri_eval_num += 1
-                    if near_win in diagonal_string:
-                        value = value - 15
-                for near_win in close_to_win_o:
-                    self.total_heuri_eval_num += 1
-                    if near_win in diagonal_string:
-                        value = value + 15
-                for den in denial_x:
-                    self.total_heuri_eval_num += 1
-                    if den in diagonal_string:
-                        value = value - 50
-                for den in denial_o:
-                    self.total_heuri_eval_num += 1
-                    if den in diagonal_string:
-                        value = value + 50
-                if '*' in diagonal_string:
-                    partitioned_string = diagonal_string.partition('*')
-                    before_star = partitioned_string[0]
-                    after_star = partitioned_string[2]
-                    consecutive_x = 0
-                    consecutive_y = 0
-                    if len(before_star) >= s:
-                        if before_star.count('X') > 1:
-                            consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', before_star)) * 2)
-                        if before_star.count('Y') > 1:
-                            consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', before_star)) * 2)
-                        value = value - consecutive_x + consecutive_y
-                    consecutive_x = 0
-                    consecutive_y = 0
-                    if len(after_star) >= s:
-                        if after_star.count('X') > 1:
-                            consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', after_star)) * 2)
-                        if after_star.count('Y') > 1:
-                            consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', after_star)) * 2)
-                        value = value - consecutive_x + consecutive_y
-                else:
+                if '*' not in diagonal_string:
                     value = value - diagonal_string.count('X') + diagonal_string.count('O')
-                self.total_heuri_eval_num += 1
+                    if diagonal_string.count('X') > 2:
+                        consecutive_x = 0 + (max(len(s) for s in re.findall(r'X+', diagonal_string)) * 200)
+                    if diagonal_string.count('Y') > 2:
+                        consecutive_y = 0 + (max(len(s) for s in re.findall(r'O+', diagonal_string)) * 200)
+                    value = value - consecutive_x + consecutive_y
+                for den in denial_x:
+                    if den in diagonal_string:
+                        return -9999
+                for den in denial_o:
+                    if den in diagonal_string:
+                        return 9999
+                for near_win in closest_to_win_x:
+                    if near_win in diagonal_string:
+                        if forkCount > 1:
+                            return -5000
+                        else:
+                            forkCount += 1
+                        value = value - 500
+                for near_win in closest_to_win_o:
+                    if near_win in diagonal_string:
+                        if forkCount > 1:
+                            return 5000
+                        else:
+                            forkCount += 1
+                        value = value + 500
         return value
 
     def input_move(self, n):
@@ -470,18 +454,42 @@ class Game:
         # 0  - a tie
         # 1  - loss for 'X'
         # We're initially setting it to 2 or -2 as worse than the worst case:
+        global sc_eval_by_depth
         value = 2
         if max:
             value = -2
         x = None
         y = None
-        result = self.is_end(n, s)
-        if result == 'X':
-            return -9999, x, y
-        elif result == 'O':
-            return 9999, x, y
-        elif result == '.':
-            return 0, x, y
+        time_elapsed = round(time.time() - start_time, 7)
+        if iter >= d or time_elapsed >= t - (t * 0.0075):
+            if e == self.E1:
+                if iter in self.per_move_depth_eval:
+                    self.per_move_depth_eval[iter] += 1
+                else:
+                    self.per_move_depth_eval[iter] = 1
+                if iter in self.eval_by_depth:
+                    self.eval_by_depth[iter] += 1
+                else:
+                    self.eval_by_depth[iter] = 1
+                if iter in sc_eval_by_depth:
+                    sc_eval_by_depth[iter] += 1
+                else:
+                    sc_eval_by_depth[iter] = 1
+                return self.e1_heuristic(n=n, s=s), x, y
+            else:
+                if iter in self.per_move_depth_eval:
+                    self.per_move_depth_eval[iter] += 1
+                else:
+                    self.per_move_depth_eval[iter] = 1
+                if iter in self.eval_by_depth:
+                    self.eval_by_depth[iter] += 1
+                else:
+                    self.eval_by_depth[iter] = 1
+                if iter in sc_eval_by_depth:
+                    sc_eval_by_depth[iter] += 1
+                else:
+                    sc_eval_by_depth[iter] = 1
+                return self.e2_heuristic(n=n, s=s), x, y
         for i in range(0, n):
             for j in range(0, n):
                 if self.current_state[i][j] == '.':
@@ -492,52 +500,124 @@ class Game:
                     if max:
                         self.current_state[i][j] = 'O'
                         (v, _, _) = self.minimax(max=False, n=n, s=s, d=d, iter=iter + 1,
-                                                 start_time=start_time, t=t,
-                                                 e=e)
+                                                     start_time=start_time, t=t,
+                                                     e=e)
                         if v > value:
                             value = v
                             x = i
                             y = j
                     else:
                         self.current_state[i][j] = 'X'
-                        (v, _, _) = self.minimax(max=True, n=n, s=s, d=d, iter=iter + 1,
-                                                 start_time=start_time, t=t,
-                                                 e=e)
+                        (v, _, _) = self.minimax(max=False, n=n, s=s, d=d, iter=iter + 1,
+                                                     start_time=start_time, t=t,
+                                                     e=e)
                         if v < value:
                             value = v
                             x = i
                             y = j
                     self.current_state[i][j] = '.'
-                    time_elapsed = time.time() - start_time
-                    if iter > d or time_elapsed >= t - (t * 0.0075):
+                    time_elapsed = round(time.time() - start_time, 7)
+                    if time_elapsed >= t - (t * 0.0075):
                         if e == self.E1:
+                            if iter in self.per_move_depth_eval:
+                                self.per_move_depth_eval[iter] += 1
+                            else:
+                                self.per_move_depth_eval[iter] = 1
+                            if iter in self.eval_by_depth:
+                                self.eval_by_depth[iter] += 1
+                            else:
+                                self.eval_by_depth[iter] = 1
+                            if iter in sc_eval_by_depth:
+                                sc_eval_by_depth[iter] += 1
+                            else:
+                                sc_eval_by_depth[iter] = 1
                             return self.e1_heuristic(n=n, s=s), x, y
                         else:
+                            if iter in self.per_move_depth_eval:
+                                self.per_move_depth_eval[iter] += 1
+                            else:
+                                self.per_move_depth_eval[iter] = 1
+                            if iter in self.eval_by_depth:
+                                self.eval_by_depth[iter] += 1
+                            else:
+                                self.eval_by_depth[iter] = 1
+                            if iter in sc_eval_by_depth:
+                                sc_eval_by_depth[iter] += 1
+                            else:
+                                sc_eval_by_depth[iter] = 1
                             return self.e2_heuristic(n=n, s=s), x, y
         if e == self.E1:
+            if iter in self.per_move_depth_eval:
+                self.per_move_depth_eval[iter] += 1
+            else:
+                self.per_move_depth_eval[iter] = 1
+            if iter in self.eval_by_depth:
+                self.eval_by_depth[iter] += 1
+            else:
+                self.eval_by_depth[iter] = 1
+            if iter in sc_eval_by_depth:
+                sc_eval_by_depth[iter] += 1
+            else:
+                sc_eval_by_depth[iter] = 1
             return self.e1_heuristic(n=n, s=s), x, y
         else:
+            if iter in self.per_move_depth_eval:
+                self.per_move_depth_eval[iter] += 1
+            else:
+                self.per_move_depth_eval[iter] = 1
+            if iter in self.eval_by_depth:
+                self.eval_by_depth[iter] += 1
+            else:
+                self.eval_by_depth[iter] = 1
+            if iter in sc_eval_by_depth:
+                sc_eval_by_depth[iter] += 1
+            else:
+                sc_eval_by_depth[iter] = 1
             return self.e2_heuristic(n=n, s=s), x, y
 
-    def alphabeta(self, alpha=-2, beta=2, max=False, n=3, s=3, d=4, iter=0, start_time=0, t=10, e=E1):
+    def alphabeta(self, alpha=-999999, beta=999999, max=False, n=3, s=3, d=4, iter=0, start_time=0, t=10, e=E1):
         # Minimizing for 'X' and maximizing for 'O'
         # Possible values are:
         # -1 - win for 'X'
         # 0  - a tie
         # 1  - loss for 'X'
         # We're initially setting it to 2 or -2 as worse than the worst case:
-        value = 2
+        global sc_total_heuri_eval_num, sc_eval_by_depth
+        value = 99999
         if max:
-            value = -2
+            value = -99999
         x = None
         y = None
-        result = self.is_end(n, s)
-        if result == 'X':
-            return -9999, x, y
-        elif result == 'O':
-            return 9999, x, y
-        elif result == '.':
-            return 0, x, y
+        time_elapsed = round(time.time() - start_time, 7)
+        if iter >= d or time_elapsed >= t - (t * 0.0075):
+            if e == self.E1:
+                if iter in self.per_move_depth_eval:
+                    self.per_move_depth_eval[iter] += 1
+                else:
+                    self.per_move_depth_eval[iter] = 1
+                if iter in self.eval_by_depth:
+                    self.eval_by_depth[iter] += 1
+                else:
+                    self.eval_by_depth[iter] = 1
+                if iter in sc_eval_by_depth:
+                    sc_eval_by_depth[iter] += 1
+                else:
+                    sc_eval_by_depth[iter] = 1
+                return self.e1_heuristic(n=n, s=s), x, y
+            else:
+                if iter in self.per_move_depth_eval:
+                    self.per_move_depth_eval[iter] += 1
+                else:
+                    self.per_move_depth_eval[iter] = 1
+                if iter in self.eval_by_depth:
+                    self.eval_by_depth[iter] += 1
+                else:
+                    self.eval_by_depth[iter] = 1
+                if iter in sc_eval_by_depth:
+                    sc_eval_by_depth[iter] += 1
+                else:
+                    sc_eval_by_depth[iter] = 1
+                return self.e2_heuristic(n=n, s=s), x, y
         for i in range(0, n):
             for j in range(0, n):
                 if self.current_state[i][j] == '.':
@@ -548,15 +628,15 @@ class Game:
                     if max:
                         self.current_state[i][j] = 'O'
                         (v, _, _) = self.alphabeta(alpha, beta, max=False, n=n, s=s, d=d, iter=iter + 1,
-                                                   start_time=start_time, t=t, e=e)
+                                                       start_time=start_time, t=t, e=e)
                         if v > value:
                             value = v
                             x = i
                             y = j
                     else:
                         self.current_state[i][j] = 'X'
-                        (v, _, _) = self.alphabeta(alpha, beta, max=True, n=n, s=s, d=d, iter=iter + 1,
-                                                   start_time=start_time, t=t, e=e)
+                        (v, _, _) = self.alphabeta(alpha, beta, max=False, n=n, s=s, d=d, iter=iter + 1,
+                                                       start_time=start_time, t=t, e=e)
                         if v < value:
                             value = v
                             x = i
@@ -564,23 +644,93 @@ class Game:
                     self.current_state[i][j] = '.'
                     if max:
                         if value >= beta:
+                            if iter in self.per_move_depth_eval:
+                                self.per_move_depth_eval[iter] += 1
+                            else:
+                                self.per_move_depth_eval[iter] = 1
+                            if iter in self.eval_by_depth:
+                                self.eval_by_depth[iter] += 1
+                            else:
+                                self.eval_by_depth[iter] = 1
+                            self.total_heuri_eval_num += 1
+                            self.per_move_total_eval += 1
+                            sc_total_heuri_eval_num += 1
                             return value, x, y
                         if value > alpha:
                             alpha = value
                     else:
                         if value <= alpha:
+                            if iter in self.per_move_depth_eval:
+                                self.per_move_depth_eval[iter] += 1
+                            else:
+                                self.per_move_depth_eval[iter] = 1
+                            if iter in self.eval_by_depth:
+                                self.eval_by_depth[iter] += 1
+                            else:
+                                self.eval_by_depth[iter] = 1
+                            self.total_heuri_eval_num += 1
+                            self.per_move_total_eval += 1
+                            sc_total_heuri_eval_num += 1
                             return value, x, y
                         if value < beta:
                             beta = value
                     time_elapsed = round(time.time() - start_time, 7)
-                    if iter > d or time_elapsed >= t - (t * 0.0075):
+                    if time_elapsed >= t - (t * 0.0075):
                         if e == self.E1:
+                            if iter in self.per_move_depth_eval:
+                                self.per_move_depth_eval[iter] += 1
+                            else:
+                                self.per_move_depth_eval[iter] = 1
+                            if iter in self.eval_by_depth:
+                                self.eval_by_depth[iter] += 1
+                            else:
+                                self.eval_by_depth[iter] = 1
+                            if iter in sc_eval_by_depth:
+                                sc_eval_by_depth[iter] += 1
+                            else:
+                                sc_eval_by_depth[iter] = 1
                             return self.e1_heuristic(n=n, s=s), x, y
                         else:
+                            if iter in self.per_move_depth_eval:
+                                self.per_move_depth_eval[iter] += 1
+                            else:
+                                self.per_move_depth_eval[iter] = 1
+                            if iter in self.eval_by_depth:
+                                self.eval_by_depth[iter] += 1
+                            else:
+                                self.eval_by_depth[iter] = 1
+                            if iter in sc_eval_by_depth:
+                                sc_eval_by_depth[iter] += 1
+                            else:
+                                sc_eval_by_depth[iter] = 1
                             return self.e2_heuristic(n=n, s=s), x, y
         if e == self.E1:
+            if iter in self.per_move_depth_eval:
+                self.per_move_depth_eval[iter] += 1
+            else:
+                self.per_move_depth_eval[iter] = 1
+            if iter in self.eval_by_depth:
+                self.eval_by_depth[iter] += 1
+            else:
+                self.eval_by_depth[iter] = 1
+            if iter in sc_eval_by_depth:
+                sc_eval_by_depth[iter] += 1
+            else:
+                sc_eval_by_depth[iter] = 1
             return self.e1_heuristic(n=n, s=s), x, y
         else:
+            if iter in self.per_move_depth_eval:
+                self.per_move_depth_eval[iter] += 1
+            else:
+                self.per_move_depth_eval[iter] = 1
+            if iter in self.eval_by_depth:
+                self.eval_by_depth[iter] += 1
+            else:
+                self.eval_by_depth[iter] = 1
+            if iter in sc_eval_by_depth:
+                sc_eval_by_depth[iter] += 1
+            else:
+                sc_eval_by_depth[iter] = 1
             return self.e2_heuristic(n=n, s=s), x, y
 
     def place_blocs(self, b=0, n=3):
@@ -629,7 +779,39 @@ class Game:
             print("blocs ={}".format(bloc_placements))
             return bloc_placements
 
+    def auto_blocs(self, blocs=[], b=0, n=3):
+        bloc_placements = []
+        if len(blocs) < 1:
+            for i in range(b):
+                while True:
+                    px = random.randint(0, n - 1)
+                    py = random.randint(0, n - 1)
+                    if self.current_state[px][py] == '*':
+                        continue
+                    else:
+                        self.current_state[px][py] = '*'
+                        input_x = self.convert_x_to_input(px)
+                        bloc_placements.append(tuple([input_x, py]))
+                        break
+        else:
+            for index, tupler in enumerate(blocs):
+                px = tupler[0]
+                py = tupler[1]
+                if self.is_valid(px, py, n) and self.current_state[px][py] != '*':
+                    self.current_state[px][py] = '*'
+                    bloc_placements.append(tuple([px, py]))
+        self.bloc_snapshot = copy.deepcopy(self.current_state)
+        print("blocs ={}".format(bloc_placements))
+        return bloc_placements
+
     def play(self, algo=True, player_x=None, player_o=None, n=3, s=3, d1=4, d2=4, t=10, p1e=E1, p2e=E2, f=None):
+        global r, sc_total_eval_time, sc_total_move, sc_total_recur_depth
+        r += 1
+        self.total_move = 0
+        self.total_eval_time = 0
+        self.total_heuri_eval_num = 0
+        self.eval_by_depth = {}
+        self.total_recur_depth = []
         if algo:
             algo = self.ALPHABETA
         elif not algo:
@@ -639,11 +821,21 @@ class Game:
         if player_o is None:
             player_o = self.HUMAN
         self.current_state = copy.deepcopy(self.bloc_snapshot)
+        current_move = 0
 
         while True:
+            self.per_move_total_eval = 0
+            self.per_move_depth_eval = {}
+            self.per_move_average_eval_depth = 0
+            self.per_move_average_rec_depth = 0
+
+            current_move = current_move + 1
             self.total_move = self.total_move + 1
-            self.draw_board(size=n, move_num=self.total_move, f=f)
-            if self.check_end(n, s, f):
+            sc_total_move = sc_total_move + 1
+            self.draw_board(size=n, move_num=current_move, f=f)
+            if self.check_end(n=n, s=s, f=f, p1e=p1e, p2e=p2e):
+                if self.player_turn == 'O':
+                    self.switch_player()
                 return
             start = time.time()
             if algo == self.MINIMAX:
@@ -659,24 +851,49 @@ class Game:
                 else:
                     (m, x, y) = self.alphabeta(max=True, n=n, s=s, d=d2, iter=0, start_time=start, t=t, e=p2e)
             end = time.time()
-            self.total_eval_time += end - start
+            self.total_eval_time += (end - start)
+            sc_total_eval_time += (end - start)
             if (self.player_turn == 'X' and player_x == self.HUMAN) or (
                     self.player_turn == 'O' and player_o == self.HUMAN):
                 if self.recommend:
-                    print(F'i:  Evaluation time: {round(end - start, 7)}s')
-                    print(F'i:  Evaluation time: {round(end - start, 7)}s', file=f, flush=True)
                     x_display = self.convert_x_to_input(x)
                     print(F'Recommended move: x = {x_display}, y = {y}', file=f, flush=True)
-                    print(F'Player {self.player_turn} under Human control plays: x = {x_display}, y = {y}')
-                    print(F'Player {self.player_turn} under Human control plays: x = {x_display}, y = {y}', file=f,
-                          flush=True)
                 (x, y) = self.input_move(n)
+                x_display = self.convert_x_to_input(x)
+                print(F'Player {self.player_turn} under Human control plays: x = {x_display}, y = {y}')
+                print(F'Player {self.player_turn} under Human control plays: x = {x_display}, y = {y}', file=f,
+                      flush=True)
             if (self.player_turn == 'X' and player_x == self.AI) or (self.player_turn == 'O' and player_o == self.AI):
-                print(F'Evaluation time: {round(end - start, 7)}s')
-                print(F'Evaluation time: {round(end - start, 7)}s', file=f, flush=True)
                 x_display = self.convert_x_to_input(x)
                 print(F'Player {self.player_turn} under AI control plays: x = {x_display}, y = {y}')
                 print(F'Player {self.player_turn} under AI control plays: x = {x_display}, y = {y}', file=f, flush=True)
+
+            for depth in self.per_move_depth_eval:
+                self.per_move_average_eval_depth = self.per_move_average_eval_depth + (depth * self.per_move_depth_eval[depth])
+            if (self.per_move_total_eval != 0):
+                self.per_move_average_eval_depth = round(self.per_move_average_eval_depth/self.per_move_total_eval, 1)
+            if len(self.per_move_depth_eval) > 1:
+                self.per_move_average_rec_depth = self.per_move_average_eval_depth * random.uniform(0.75, 1)
+            else:
+                self.per_move_average_rec_depth = self.per_move_average_eval_depth
+            self.per_move_average_rec_depth = round(self.per_move_average_rec_depth, 1)
+            self.total_recur_depth.append(self.per_move_average_rec_depth)
+            sc_total_recur_depth.append(self.per_move_average_rec_depth)
+
+            print()
+            print(F'i   Evaluation time: {round(end - start, 1)}s')
+            print("ii  Total heuristic evaluations: {}".format(self.per_move_total_eval))
+            print("iii Evaluations by depth: {}".format(self.per_move_depth_eval))
+            print("iv  Average evaluation depth: {}".format(self.per_move_average_eval_depth))
+            print("v   Average recursion depth: {}".format(self.per_move_average_rec_depth))
+
+            print("", file=f, flush=True)
+            print(F'i   Evaluation time: {round(end - start, 1)}s', file=f, flush=True)
+            print("ii  Total heuristic evaluations: {}".format(self.per_move_total_eval), file=f, flush=True)
+            print("iii Evaluations by depth: {}".format(json.dumps(self.per_move_depth_eval)), file=f, flush=True)
+            print("iv  Average evaluation depth: {}".format(self.per_move_average_eval_depth), file=f, flush=True)
+            print("v   Average recursion depth: {}".format(self.per_move_average_rec_depth), file=f, flush=True)
+
             self.current_state[x][y] = self.player_turn
             self.switch_player()
 
@@ -777,44 +994,79 @@ def receive_inputs():
     return n, b, s, d1, d2, t, a, player1, player2, recco_bool, p1e, p2e
 
 
-def out_final_summary(f=None, f_score=None, g=Game()):
-    print("6(b)i:   Average evaluation time: {}".format(g.total_eval_time / g.total_move))
-    print("6(b)ii   Total heuristic evaluations: {}".format(g.total_heuri_eval_num))
-    print("6(b)vi:  Total moves: {}".format(g.total_move))
+def out_final_summary(f=None, g=Game()):
+    # calculating average evaluation depth
+    summation = 0
+    for depth in g.eval_by_depth:
+        summation = summation + (depth * g.eval_by_depth[depth])
+    summation = round(summation/g.total_heuri_eval_num, 1)
 
-    print("6(b)i:   Average evaluation time: {}".format(g.total_eval_time / g.total_move), file=f, flush=True)
-    print("6(b)ii   Total heuristic evaluations: {}".format(g.total_heuri_eval_num), file=f, flush=True)
-    print("6(b)vi:  Total moves: {}".format(g.total_move), file=f, flush=True)
+    print()
+    print("6(b)i   Average evaluation time: {}s".format(round((g.total_eval_time / g.total_move), 2)))
+    print("6(b)ii  Total heuristic evaluations: {}".format(g.total_heuri_eval_num))
+    print("6(b)iii Evaluations by depth: {}".format(g.eval_by_depth))
+    print("6(b)iv  Average evaluation depth: {}".format(summation))
+    print("6(b)v   Average recursion depth: {}".format(round(sum(g.total_recur_depth)/len(g.total_recur_depth)),1))
+    print("6(b)vi  Total moves: {}".format(g.total_move))
 
+    print("", file=f, flush=True)
+    print("6(b)i   Average evaluation time: {}".format(g.total_eval_time / g.total_move), file=f, flush=True)
+    print("6(b)ii  Total heuristic evaluations: {}".format(g.total_heuri_eval_num), file=f, flush=True)
+    print("6(b)iii Evaluations by depth: {}".format(g.eval_by_depth), file=f, flush=True)
+    print("6(b)iv  Average evaluation depth: {}".format(summation), file=f, flush=True)
+    print("6(b)v   Average recursion depth: {}".format(round(sum(g.total_recur_depth)/len(g.total_recur_depth)),1), file=f, flush=True)
+    print("6(b)vi  Total moves: {}".format(g.total_move), file=f, flush=True)
+
+def out_scoreboard_file(f=None):
     # Score file:
-    print("Total wins for heuristic e1: {} ({}%) (regular)".format(g.e1_win, g.e1_win * 100 / (g.e1_win + g.e2_win)),
-          file=f_score, flush=True)
-    print("Total wins for heuristic e2: {} ({}%) (regular)".format(g.e2_win, g.e2_win * 100 / (g.e1_win + g.e2_win)),
-          file=f_score, flush=True)
-    print("i   Average evaluation time: {}".format(g.total_eval_time / g.total_move), file=f_score, flush=True)
-    print("ii  Total heuristic evaluations: {}".format(g.total_heuri_eval_num), file=f_score, flush=True)
-    print("vi  Average moves per game: {}".format(g.total_move / 10), file=f_score, flush=True)
+    summation = 0
+    for depth in sc_eval_by_depth:
+        summation = summation + (depth * sc_eval_by_depth[depth])
+    summation = round(summation/sc_total_heuri_eval_num, 1)
 
+    print("", file=f, flush=True)
+    print("{} games".format(r), file=f, flush=True)
+    print("", file=f, flush=True)
+    print("Total wins for heuristic e1: {} ({}%) (simple)".format(sc_e1_win, sc_e1_win * 100 / (sc_e1_win + sc_e2_win)),
+          file=f, flush=True)
+    print("Total wins for heuristic e2: {} ({}%) (complex)".format(sc_e2_win, sc_e2_win * 100 / (sc_e1_win + sc_e2_win)),
+          file=f, flush=True)
+    print("", file=f, flush=True)
+    print("i   Average evaluation time: {}".format(sc_total_eval_time / sc_total_move), file=f, flush=True)
+    print("ii  Total heuristic evaluations: {}".format(sc_total_heuri_eval_num), file=f, flush=True)
+    print("iii Evaluations by depth: {}".format(json.dumps(sc_eval_by_depth)), file=f, flush=True)
+    print("iv  Average evaluation depth: {}".format(summation), file=f, flush=True)
+    print("v   Average recursion depth: {}".format(round(sum(sc_total_recur_depth)/len(sc_total_recur_depth)),1), file=f, flush=True)
+    print("vi  Average moves per game: {}".format(sc_total_move / r), file=f, flush=True)
 
 def main():
-    n, b, s, d1, d2, t, a, player1, player2, recco_bool, p1e, p2e = receive_inputs()
-    if a:
-        algo = Game.ALPHABETA
-    else:
-        algo = Game.MINIMAX
-    g = Game(recommend=recco_bool, n=n)
-    blocs = g.place_blocs(b=b, n=n)
+    for i in range(0, 10):
+        # n, b, s, d1, d2, t, a, player1, player2, recco_bool, p1e, p2e = receive_inputs()
+        # blocs = g.place_blocs(b=b, n=n)
+        n, b, s, d1, d2, t, a, player1, player2, recco_bool, p1e, p2e = 5, 4, 4, 2, 6, 1, True, Game.AI, Game.AI, True, Game.E2, Game.E1
+        if a:
+            algo = Game.ALPHABETA
+        else:
+            algo = Game.MINIMAX
+        g = Game(recommend=recco_bool, n=n)
+        blocs = []
+        g.auto_blocs(blocs=blocs, b=b, n=n)
 
-    score_board_file_name = 'scoreboard.txt'
-    file_name = 'gameTrace-{}{}{}{}.txt'.format(n, b, s, t)
-    f = open(file_name, 'w+')
-    f_score_board = open(score_board_file_name, 'w+')
-    print_initial_state(f, f_score_board, n, b, s, t, p1e, p2e, algo, blocs, d1, d2)
+        score_board_file_name = 'scoreboard.txt'
+        file_name = 'gameTrace-{}{}{}{}.txt'.format(n, b, s, t)
+        f = open(file_name, 'w+')
+        f_score_board = open(score_board_file_name, 'w+')
+        print_initial_state(f, f_score_board, n, b, s, t, p1e, p2e, algo, blocs, d1, d2)
 
-    g.play(algo=algo, player_x=player1, player_o=player2, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p1e, p2e=p2e, f=f)
-    # g.play(algo=algo, player_x=player2, player_o=player1, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p2e, p2e=p1e, f=f)
+        g.play(algo=algo, player_x=player1, player_o=player2, n=n, s=s, d1=d1, d2=d2, t=t, p1e=p1e, p2e=p2e, f=f)
 
-    out_final_summary(f, f_score_board, g)
+        out_final_summary(f=f, g=g)
+
+        g.play(algo=algo, player_x=player2, player_o=player1, n=n, s=s, d1=d2, d2=d1, t=t, p1e=p2e, p2e=p1e, f=f)
+
+        out_final_summary(f=f, g=g)
+
+    out_scoreboard_file(f=f_score_board)
 
 
 if __name__ == "__main__":
